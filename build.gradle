@@ -1,6 +1,6 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '3.5.0'
+    id("org.springframework.boot") version "4.0.0-M3"
     id 'io.spring.dependency-management' version '1.1.4'  // Добавьте версию
     id 'org.flywaydb.flyway' version '11.9.1'
 }
@@ -13,10 +13,10 @@ repositories {
 }
 
 dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter-webflux'
 
-    implementation 'org.springframework.boot:spring-boot-starter-jdbc'
-    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation("org.springframework.boot:spring-boot-starter-jdbc:4.0.0-M3")
+    implementation("org.springframework.boot:spring-boot-starter-web:4.0.0-M3")
+
 
     implementation("org.postgresql:postgresql:42.7.7")
     implementation 'org.mybatis:mybatis:3.5.19'
@@ -26,6 +26,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'org.mapstruct:mapstruct:1.6.3'
     implementation 'org.mapstruct:mapstruct:1.6.3'
+    implementation("io.minio:minio:8.5.17")
 
     runtimeOnly 'org.flywaydb:flyway-database-postgresql'
 
