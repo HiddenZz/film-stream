@@ -27,6 +27,8 @@ dependencies {
     implementation 'org.mapstruct:mapstruct:1.6.3'
     implementation 'org.mapstruct:mapstruct:1.6.3'
     implementation("io.minio:minio:8.5.17")
+    implementation 'io.lindstrom:m3u8-parser:0.29'
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
 
     runtimeOnly 'org.flywaydb:flyway-database-postgresql'
 
