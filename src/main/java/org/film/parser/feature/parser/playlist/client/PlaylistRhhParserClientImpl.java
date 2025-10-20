@@ -34,15 +34,22 @@ public class PlaylistRhhParserClientImpl implements PlaylistParserClient {
             }
         };
 
-        final HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(formData, headers);
+       try {
+           final HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(formData, headers);
 
-        final AvailablePlayer[] availablePlayers = restTemplate.postForObject("/cache", request, AvailablePlayer[].class);
+           final AvailablePlayer[] availablePlayers = restTemplate.postForObject("/cache", request, AvailablePlayer[].class);
 
-        if(availablePlayers == null) {
+           if(availablePlayers == null) {
+               return List.of();
+           }
+
+           return List.of(availablePlayers);
+       }
+       catch (final Exception e) {
             return List.of();
-        }
+       }
 
-        return List.of(availablePlayers);
+
     }
 
 }

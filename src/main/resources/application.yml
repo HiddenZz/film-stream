@@ -36,3 +36,4 @@ logging:
     org.springframework.web.client.RestTemplate: DEBUG
     org.apache.http: DEBUG
     httpclient.wire: DEBUG
+    org.film.parser: DEBUG
