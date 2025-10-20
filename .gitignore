@@ -41,3 +41,9 @@ bin/
 
 ### Mac OS ###
 .DS_Store
+
+
+### Docker ###
+docker-compose.override.yml
+docker/local.env
+docker/miniosolo/
