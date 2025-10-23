@@ -5,6 +5,7 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
@@ -12,42 +13,38 @@ import java.util.List;
 @Component
 public class PlaylistRhhParserClientImpl implements PlaylistParserClient {
 
-    private final RestTemplate restTemplate;
+    private final RestClient restClient;
 
-    PlaylistRhhParserClientImpl(RestTemplate restTemplate) {
-        this.restTemplate = restTemplate;
+    PlaylistRhhParserClientImpl(RestClient restClient) {
+        this.restClient = restClient;
     }
 
     @Override
     public List<AvailablePlayer> moviePlaylist(long movieId) {
 
-        final MultiValueMap<String, String> formData = new LinkedMultiValueMap<>(){
+        final MultiValueMap<String, String> formData = new LinkedMultiValueMap<>() {
             {
                 add("kinopoisk", String.valueOf(movieId));
                 add("type", "movie");
             }
         };
 
-        final HttpHeaders headers = new HttpHeaders(){
-            {
-                setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        try {
+            final AvailablePlayer[] availablePlayers = restClient.post()
+                                                                 .uri("/cache")
+                                                                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                                                                 .body(formData)
+                                                                 .retrieve()
+                                                                 .toEntity(AvailablePlayer[].class)
+                                                                 .getBody();
+            if (availablePlayers == null) {
+                return List.of();
             }
-        };
 
-       try {
-           final HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(formData, headers);
-
-           final AvailablePlayer[] availablePlayers = restTemplate.postForObject("/cache", request, AvailablePlayer[].class);
-
-           if(availablePlayers == null) {
-               return List.of();
-           }
-
-           return List.of(availablePlayers);
-       }
-       catch (final Exception e) {
+            return List.of(availablePlayers);
+        } catch (final Exception e) {
             return List.of();
-       }
+        }
 
 
     }

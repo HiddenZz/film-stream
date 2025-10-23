@@ -10,13 +10,11 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.DefaultUriBuilderFactory;
 
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
+import javax.net.ssl.*;
 import java.net.CookieManager;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
+import java.net.ProxySelector;
 import java.net.http.HttpClient;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
@@ -28,10 +26,9 @@ import java.time.Duration;
 public class RestTemplateConfiguration {
 
     @Bean
-    RestTemplate restTemplate(RestTemplateConfigurationProperties props) {
-        RestTemplate restTemplate = new RestTemplate();
-        restTemplate.setUriTemplateHandler(new DefaultUriBuilderFactory(props.getParseHost()));
-        return restTemplate;
+    RestClient restClient(RestTemplateConfigurationProperties props) {
+        return RestClient.builder()
+                         .baseUrl(props.getParseHost()).build();
     }
 
     @Bean
@@ -54,7 +51,7 @@ public class RestTemplateConfiguration {
 
 
     @Bean
-    RestTemplate proxyRestTemplate() throws NoSuchAlgorithmException, KeyManagementException {
+    RestClient proxyRestClient() throws NoSuchAlgorithmException, KeyManagementException {
         TrustManager[] trustAllCerts = new TrustManager[]{
                 new X509TrustManager() {
                     public X509Certificate[] getAcceptedIssuers() {
@@ -75,11 +72,21 @@ public class RestTemplateConfiguration {
         HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
         HttpsURLConnection.setDefaultHostnameVerifier((hostname, session) -> true);
 
-        // Настройка прокси
-        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
-        Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress("127.0.0.1", 8080));
-        factory.setProxy(proxy);
-        return new RestTemplate(factory);
+        SSLParameters sslParameters = new SSLParameters();
+        sslParameters.setEndpointIdentificationAlgorithm(null);
+
+        HttpClient jdkHttpClient = HttpClient.newBuilder()
+                                             .followRedirects(HttpClient.Redirect.NORMAL)
+                                             .connectTimeout(Duration.ofSeconds(5))
+                                             .cookieHandler(new CookieManager())
+                                             .sslContext(sc)
+                                             .sslParameters(sslParameters)
+                                             .proxy(ProxySelector.of(new InetSocketAddress("127.0.0.1", 8080)))
+                                             .build();
+
+        return RestClient.builder()
+                         .requestFactory(new JdkClientHttpRequestFactory(jdkHttpClient))
+                         .build();
     }
 
 }
