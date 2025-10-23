@@ -4,7 +4,9 @@ import org.film.parser.feature.configuration.properties.RestTemplateConfiguratio
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.DefaultUriBuilderFactory;
 
@@ -12,11 +14,14 @@ import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
+import java.net.CookieManager;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
+import java.net.http.HttpClient;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.X509Certificate;
+import java.time.Duration;
 
 @EnableConfigurationProperties({RestTemplateConfigurationProperties.class})
 @Configuration
@@ -30,18 +35,37 @@ public class RestTemplateConfiguration {
     }
 
     @Bean
-    RestTemplate masterPlaylistParserRestTemplate() {
-        return new RestTemplate();
+    RestClient lumexRestClient() {
+        HttpClient jdkHttpClient = HttpClient.newBuilder()
+                                             .followRedirects(HttpClient.Redirect.NORMAL)
+                                             .connectTimeout(Duration.ofSeconds(5))
+                                             .cookieHandler(new CookieManager())
+                                             .build();
+
+        return RestClient.builder()
+                         .requestFactory(new JdkClientHttpRequestFactory(jdkHttpClient))
+                         .defaultHeaders((headers) -> {
+                             headers.add("Origin", "https://p.lumex.space");
+                             headers.add("Referer", "https://p.lumex.space/");
+                             headers.add("Sec-Fetch-Dest", "empty");
+                             headers.add("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36");
+                         }).build();
     }
 
 
     @Bean
-    RestTemplate proxyRestTemplate()throws NoSuchAlgorithmException, KeyManagementException{
-        TrustManager[] trustAllCerts = new TrustManager[] {
+    RestTemplate proxyRestTemplate() throws NoSuchAlgorithmException, KeyManagementException {
+        TrustManager[] trustAllCerts = new TrustManager[]{
                 new X509TrustManager() {
-                    public X509Certificate[] getAcceptedIssuers() { return null; }
-                    public void checkClientTrusted(X509Certificate[] certs, String authType) { }
-                    public void checkServerTrusted(X509Certificate[] certs, String authType) { }
+                    public X509Certificate[] getAcceptedIssuers() {
+                        return null;
+                    }
+
+                    public void checkClientTrusted(X509Certificate[] certs, String authType) {
+                    }
+
+                    public void checkServerTrusted(X509Certificate[] certs, String authType) {
+                    }
                 }
         };
 
