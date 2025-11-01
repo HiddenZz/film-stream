@@ -19,7 +19,7 @@ public class SavePlaylistInfoServiceImpl implements SavePlaylistInfoService {
     private final FileStorageClient fileStorageClient;
 
     public SavePlaylistInfoServiceImpl(MasterPlaylistMetadataRepository playlistMetadataRepository,
-                                       ApplicationEventPublisher eventPublisher, FileStorageClient fileStorageClient) {
+                                       FileStorageClient fileStorageClient) {
         this.playlistMetadataRepository = playlistMetadataRepository;
         this.fileStorageClient = fileStorageClient;
     }
@@ -28,7 +28,6 @@ public class SavePlaylistInfoServiceImpl implements SavePlaylistInfoService {
     @Override
     @Transactional
     public void saveMasterPlaylistInfo(long contentId, MasterMedia parsedMasterMedia) {
-        final ParsedMasterMedia parsedMasterMediaData = parsedMasterMedia.parsedMasterMedia();
 
         MasterPlaylistMetadata metadata = MasterPlaylistMetadata.builder()
                                                                 .contentId(contentId)
