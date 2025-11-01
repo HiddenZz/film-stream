@@ -1,11 +1,9 @@
 package org.film.parser.feature.parser.playlist.service;
 
-import org.film.parser.feature.parser.playlist.data.AvailablePlayer;
-
-import java.util.List;
+import org.film.parser.feature.parser.playlist.data.ParsedMasterMedia;
 
 public interface PlaylistParserService {
 
-    String parseMasterPlaylist(long id);
+    ParsedMasterMedia parseMasterPlaylist(long id);
 
 }

@@ -1,6 +1,6 @@
 package org.film.parser.feature.parser.playlist.data.exceptions;
 
-public class ParseIframeException extends RuntimeException {
+public class ParseIframeException extends ParseException {
 
     public ParseIframeException() {
         super("Can't parse iframe");

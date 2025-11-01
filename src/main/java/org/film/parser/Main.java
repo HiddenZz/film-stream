@@ -1,12 +1,16 @@
 package org.film.parser;
 
+import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Configuration;
 
 @SpringBootApplication
-@EnableConfigurationProperties
+@ConfigurationPropertiesScan(basePackages = "org.film.parser.feature.configuration")
+@MapperScan("org.film.parser.feature.playlist.repository.mapper")
 public class Main {
     public static void main(String[] args) {
 

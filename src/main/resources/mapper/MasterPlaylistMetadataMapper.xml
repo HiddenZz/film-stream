@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.film.parser.feature.playlist.repository.mapper.MasterPlaylistMetadataMapper">
+
+    <!-- Result Map для маппинга колонок таблицы на поля MasterPlaylistMetadata -->
+    <resultMap id="playlistMetadataResultMap" type="org.film.parser.feature.playlist.data.MasterPlaylistMetadata">
+        <constructor>
+            <idArg column="id" javaType="_long"/>
+            <arg column="content_id" javaType="_long"/>
+            <arg column="parser_service_name" javaType="string"/>
+            <arg column="master_playlist_url" javaType="string"/>
+            <arg column="minio_object_key" javaType="string"/>
+            <arg column="status" javaType="org.film.parser.feature.playlist.data.StorageStatus"
+                 typeHandler="org.apache.ibatis.type.EnumTypeHandler"/>
+            <arg column="error_message" javaType="string"/>
+            <arg column="created_at" javaType="java.time.LocalDateTime"/>
+            <arg column="updated_at" javaType="java.time.LocalDateTime"/>
+        </constructor>
+    </resultMap>
+
+    <!-- INSERT: Вставка новой записи -->
+    <insert id="insert" parameterType="org.film.parser.feature.playlist.data.MasterPlaylistMetadata"
+            useGeneratedKeys="true" keyColumn="id">
+        INSERT INTO master_playlist_metadata (content_id,
+                                              parser_service_name,
+                                              master_playlist_url,
+                                              minio_object_key,
+                                              status,
+                                              error_message,
+                                              created_at,
+                                              updated_at)
+        VALUES (#{contentId},
+                #{parserServiceName},
+                #{masterPlaylistUrl},
+                #{minioObjectKey},
+                #{status, typeHandler=org.apache.ibatis.type.EnumTypeHandler},
+                #{errorMessage},
+                COALESCE(#{createdAt}, NOW()),
+                COALESCE(#{updatedAt}, NOW()))
+    </insert>
+
+    <!-- SELECT: Поиск по ID -->
+    <select id="findById" resultMap="playlistMetadataResultMap">
+        SELECT *
+        FROM master_playlist_metadata
+        WHERE id = #{id}
+    </select>
+
+    <!-- SELECT: Поиск по content_id -->
+    <select id="findByContentId" resultMap="playlistMetadataResultMap">
+        SELECT *
+        FROM master_playlist_metadata
+        WHERE content_id = #{contentId}
+    </select>
+
+    <!-- SELECT: Поиск по статусу -->
+    <select id="findByStatus" resultMap="playlistMetadataResultMap">
+        SELECT *
+        FROM master_playlist_metadata
+        WHERE status = #{status, typeHandler=org.apache.ibatis.type.EnumTypeHandler}
+        ORDER BY created_at
+    </select>
+
+    <!-- SELECT: Поиск по статусу и дате обновления -->
+    <select id="findByStatusAndUpdatedAtBefore" resultMap="playlistMetadataResultMap">
+        SELECT *
+        FROM master_playlist_metadata
+        WHERE status = #{status, typeHandler=org.apache.ibatis.type.EnumTypeHandler}
+          AND updated_at <![CDATA[<]]> #{updatedBefore}
+        ORDER BY updated_at
+    </select>
+
+    <!-- SELECT: Поиск застрявших в PENDING -->
+    <select id="findStuckPending" resultMap="playlistMetadataResultMap">
+        SELECT *
+        FROM master_playlist_metadata
+        WHERE status = 'PENDING'
+          AND created_at <![CDATA[<]]> #{createdBefore}
+        ORDER BY created_at
+    </select>
+
+    <!-- UPDATE: Обновление статуса -->
+    <update id="updateStatus">
+        UPDATE master_playlist_metadata
+        SET status     = #{status, typeHandler=org.apache.ibatis.type.EnumTypeHandler},
+            updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <!-- UPDATE: Обновление статуса и MinIO ключа -->
+    <update id="updateStatusAndMinioKey">
+        UPDATE master_playlist_metadata
+        SET status           = #{status, typeHandler=org.apache.ibatis.type.EnumTypeHandler},
+            minio_object_key = #{minioKey},
+            updated_at       = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <!-- UPDATE: Пометить как failed -->
+    <update id="markAsFailed">
+        UPDATE master_playlist_metadata
+        SET status        = 'FAILED',
+            error_message = #{errorMessage},
+            updated_at    = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <!-- UPDATE: Обновить время последнего доступа -->
+    <update id="updateLastAccessed">
+        UPDATE master_playlist_metadata
+        SET updated_at = NOW()
+        WHERE content_id = #{contentId}
+    </update>
+
+    <!-- UPDATE: Обновить метадату -->
+    <update id="update">
+        UPDATE master_playlist_metadata
+        SET parser_service_name = #{parserServiceName},
+            master_playlist_url = #{masterPlaylistUrl},
+            minio_object_key    = #{minioObjectKey},
+            status              = #{status, typeHandler=org.apache.ibatis.type.EnumTypeHandler},
+            error_message       = #{errorMessage},
+            updated_at          = NOW()
+        WHERE content_id = #{contentId}
+    </update>
+
+    <!-- DELETE: Удаление по ID -->
+    <delete id="deleteById">
+        DELETE
+        FROM master_playlist_metadata
+        WHERE id = #{id}
+    </delete>
+
+    <!-- DELETE: Удаление по content_id -->
+    <delete id="deleteByContentId">
+        DELETE
+        FROM master_playlist_metadata
+        WHERE content_id = #{contentId}
+    </delete>
+
+    <!-- DELETE: Удаление старых записей -->
+    <delete id="deleteOldRecords">
+        DELETE
+        FROM master_playlist_metadata
+        WHERE created_at <![CDATA[<]]> #{createdBefore}
+    </delete>
+
+</mapper>

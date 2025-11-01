@@ -1,10 +1,10 @@
 package org.film.parser.feature.playlist.controller;
 
+import jakarta.websocket.server.PathParam;
 import org.film.parser.feature.parser.playlist.service.PlaylistParserService;
-import org.film.parser.feature.parser.playlist.service.PlaylistParserServiceImpl;
 import org.film.parser.feature.playlist.data.Playlist;
 import org.film.parser.feature.playlist.service.PlaylistService;
-import org.springframework.http.MediaType;
+import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -15,35 +15,35 @@ import org.springframework.web.bind.annotation.RestController;
 public class PlaylistController {
 
     private final PlaylistService playlistService;
-    private final PlaylistParserService servivce;
+    private final PlaylistParserService playlistParserService;
 
-    PlaylistController(PlaylistService playlistService, PlaylistParserService service) {
+    PlaylistController(PlaylistService playlistService, PlaylistParserService playlistParserService) {
         this.playlistService = playlistService;
-        this.servivce = service;
+        this.playlistParserService = playlistParserService;
     }
 
     @GetMapping("/")
     public ResponseEntity<String> getPlayer(@RequestParam() long id) {
 
-        final var playlist = servivce.parseMasterPlaylist(id);
+        final var playlist = playlistParserService.parseMasterPlaylist(id);
 
-        if(playlist == null) {
+        if (playlist == null) {
             return ResponseEntity.noContent().build();
         }
 
         return ResponseEntity.ok("good");
     }
 
-    @GetMapping("/{movieId}/playlist.m3u8")
-    public ResponseEntity<Playlist> getPlaylist(String id, String type) {
+    @GetMapping("/{movieId}/index.m3u8")
+    public ResponseEntity<Resource> getPlaylist(@PathVariable() long movieId) {
 
-        final Playlist playlist = playlistService.getPlaylist(id, type);
+        final Playlist playlist = playlistService.getPlaylist(movieId, "movie");
 
-        if(playlist == null) {
+        if (playlist == null) {
             return ResponseEntity.noContent().build();
         }
 
-        return ResponseEntity.ok(playlist);
+        return ResponseEntity.ok().body(playlist.content());
     }
 
 }

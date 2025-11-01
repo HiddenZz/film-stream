@@ -1,45 +1,56 @@
 package org.film.parser.feature.parser.playlist.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.film.parser.feature.parser.playlist.client.PlaylistParserClient;
 import org.film.parser.feature.parser.playlist.data.AvailablePlayer;
+import org.film.parser.feature.parser.playlist.data.ParsedMasterMedia;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-
-import static java.util.Map.ofEntries;
 
 @Service
+@Slf4j
 public class PlaylistParserServiceImpl implements PlaylistParserService {
 
     private final PlaylistParserClient parserClient;
-    private final MasterPlaylistParserService service;
+    private final MasterPlaylistParserResolver masterPlaylistparserResolver;
 
-    public PlaylistParserServiceImpl(PlaylistParserClient parserClient, LumexMasterPlaylistParserService service ) {
+    public PlaylistParserServiceImpl(PlaylistParserClient parserClient,
+                                     MasterPlaylistParserResolver masterPlaylistparserResolver) {
         this.parserClient = parserClient;
-        this.service = service;
+        this.masterPlaylistparserResolver = masterPlaylistparserResolver;
     }
 
+
     @Override
-    public String parseMasterPlaylist(long id) {
+    public ParsedMasterMedia parseMasterPlaylist(long id) {
         final List<AvailablePlayer> availablePlayers = parserClient.moviePlaylist(id);
 
-        if(availablePlayers == null || availablePlayers.isEmpty()) {
+        if (availablePlayers == null || availablePlayers.isEmpty()) {
             throw new RuntimeException("List master playlist not found");
         }
 
-        final AvailablePlayer player = availablePlayers.stream().filter(pl ->pl.name().equals("videocdn")).findFirst().orElse(null);
-        service.parse(player.iframe(), id);
 
+        return availablePlayers.stream()
+                               .map(player -> {
+                                   MasterPlaylistParserService parser = masterPlaylistparserResolver.resolveMasterParser(player.name());
+                                   if (parser == null) return null;
 
-        final Map<String, AvailablePlayer> players = availablePlayers.stream().collect(Collectors.toMap(
-                AvailablePlayer::name,
-                Function.identity(),
-                (existing, replacement) -> existing
-        ));
+                                   return tryParse(parser, player, id);
+                               })
+                               .filter(Objects::nonNull)
+                               .findFirst()
+                               .orElseThrow(() -> new RuntimeException("All parsers failed"));
 
-
-        return "";
     }
+
+    private ParsedMasterMedia tryParse(MasterPlaylistParserService parser, AvailablePlayer player, long id) {
+        try {
+            return parser.parse(player.iframe(), id);
+        } catch (Exception e) {
+            log.warn("Failed to parse with player: {}. Error: {}", player.name(), e.getMessage());
+            return null;
+        }
+    }
+
 }

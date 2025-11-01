@@ -3,14 +3,16 @@ package org.film.parser.feature.parser.playlist.service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.minio.MinioClient;
 import lombok.Data;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.film.parser.core.util.SupplierWithException;
+import org.film.parser.feature.configuration.properties.external.LumexConfig;
 import org.film.parser.feature.parser.playlist.data.LumexContentPlayer;
 import org.film.parser.feature.parser.playlist.data.LumexResponse;
-import org.film.parser.feature.parser.playlist.data.Media;
+import org.film.parser.feature.parser.playlist.data.ParsedMasterMedia;
 import org.film.parser.feature.parser.playlist.data.exceptions.ParseIframeException;
+import org.film.parser.feature.parser.playlist.data.exceptions.ParseMasterPlaylistException;
 import org.film.parser.feature.parser.playlist.data.exceptions.PlaylistDownloadException;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.http.ResponseEntity;
@@ -19,51 +21,48 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.Function;
 
 @Slf4j
 @Service
 public class LumexMasterPlaylistParserService implements MasterPlaylistParserService {
-    private final String host = "https://api.lumex.space";
+
 
     private final ObjectMapper mapper;
-    private final MinioClient minioClient;
     private final RestClient lumexRestClient;
 
-    public LumexMasterPlaylistParserService(ObjectMapper mapper, MinioClient minioClient, RestClient lumexRestClient) {
+    @Getter
+    private final String name;
+    private final String host;
+
+    public LumexMasterPlaylistParserService(ObjectMapper mapper, RestClient lumexRestClient, LumexConfig config) {
         this.mapper = mapper;
-        this.minioClient = minioClient;
         this.lumexRestClient = lumexRestClient;
+        this.name = config.name();
+        this.host = config.host();
     }
 
     @Override
-    public Media parse(String iframe, long contentId) {
-
-
+    public ParsedMasterMedia parse(String iframe, long contentId) {
         try {
             final LumexContentPlayer.LumexContentPlayerMedia lumexContent = extractFirstMedia(iframe);
 
             final String parsedUrl = parseUrlMasterPlaylist(lumexContent);
             final byte[] playlistData = downloadMasterPlaylist(parsedUrl);
 
-            log.debug("Parsed url: {}", parsedUrl);
-            String playlistContent = new String(playlistData, StandardCharsets.UTF_8);
-            log.debug("Playlist content: {}", playlistContent);
+            return ParsedMasterMedia.builder().name(name).masterPlaylist(playlistData).parsedUrl(parsedUrl).build();
         } catch (PlaylistDownloadException | ParseIframeException e) {
             throw e;
         } catch (Exception e) {
-            log.warn("Failed saving lumex media to minio", e);
+            log.error("Failed saving lumex media to minio", e);
+            throw new ParseMasterPlaylistException();
         }
-
-        return Media.builder().build();
     }
 
 
-    private byte[] downloadMasterPlaylist(String playlistUrl) {
+    byte[] downloadMasterPlaylist(String playlistUrl) {
         try {
-
 
             final ResponseEntity<byte[]> response = lumexRestClient.get()
                                                                    .uri(new URI(playlistUrl))
@@ -78,12 +77,12 @@ public class LumexMasterPlaylistParserService implements MasterPlaylistParserSer
         } catch (PlaylistDownloadException e) {
             throw e;
         } catch (Exception e) {
-            log.warn("Error downloading master playlist from URL: {}", playlistUrl, e);
+            log.error("Error downloading master playlist from URL: {}", playlistUrl, e);
             throw new PlaylistDownloadException("Failed to download master playlist");
         }
     }
 
-    private String parseUrlMasterPlaylist(LumexContentPlayer.LumexContentPlayerMedia media) {
+    String parseUrlMasterPlaylist(LumexContentPlayer.LumexContentPlayerMedia media) {
         try {
             final String mediaUrl = media.playlist();
 
@@ -104,12 +103,12 @@ public class LumexMasterPlaylistParserService implements MasterPlaylistParserSer
 
             throw new ParseIframeException("Invalid url type in lumex media: " + media);
         } catch (Exception e) {
-            log.warn("Error when parsing url from lumex media: {}", media, e);
+            log.error("Error when parsing url from lumex media: {}", media, e);
             throw new ParseIframeException();
         }
     }
 
-    private <T> ResponseEntity<T> requestWithRetry(SupplierWithException<ResponseEntity<T>> request, int attempt) {
+    <T> ResponseEntity<T> requestWithRetry(SupplierWithException<ResponseEntity<T>> request, int attempt) {
         if (attempt <= 0) {
             throw new RuntimeException("Attempts is less than 1 ");
         }
@@ -130,7 +129,7 @@ public class LumexMasterPlaylistParserService implements MasterPlaylistParserSer
 
 
     @NotNull
-    private LumexContentPlayer.LumexContentPlayerMedia extractFirstMedia(String iframe) {
+    LumexContentPlayer.LumexContentPlayerMedia extractFirstMedia(String iframe) {
         try {
             final SegmentInfo segments = parseSegmentInfo(iframe);
 
@@ -151,14 +150,14 @@ public class LumexMasterPlaylistParserService implements MasterPlaylistParserSer
             return lumexContent;
 
         } catch (Exception e) {
-            log.warn("Error when parsing playlist iframe", e);
+            log.error("Error when parsing playlist iframe", e);
             throw new ParseIframeException();
         }
     }
 
 
     @NotNull
-    private URI buildUriForFetchMediaContent(SegmentInfo segments) {
+    URI buildUriForFetchMediaContent(SegmentInfo segments) {
 
         return UriComponentsBuilder.fromUriString(host + "/content/")
                                    .queryParam("clientId", segments.clientId)
@@ -170,7 +169,7 @@ public class LumexMasterPlaylistParserService implements MasterPlaylistParserSer
     }
 
 
-    private SegmentInfo parseSegmentInfo(String iframe) {
+    SegmentInfo parseSegmentInfo(String iframe) {
         try {
             final URI uri = new URI("https:" + iframe);
 
@@ -193,14 +192,14 @@ public class LumexMasterPlaylistParserService implements MasterPlaylistParserSer
 
             return new SegmentInfo(getSegment.apply(0), getSegment.apply(1), getSegment.apply(2));
         } catch (Exception e) {
-            log.warn("Error when getting segments from iframe: {}", iframe, e);
+            log.error("Error when getting segments from iframe: {}", iframe, e);
             throw new ParseIframeException("Error when getting segments from iframe");
         }
     }
 
 
     @Data
-    private static class SegmentInfo {
+    static class SegmentInfo {
         final String clientId;
         final String contentType;
         final String contentId;
