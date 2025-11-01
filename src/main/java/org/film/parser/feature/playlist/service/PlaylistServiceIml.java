@@ -54,7 +54,7 @@ public class PlaylistServiceIml implements PlaylistService {
         }
 
         try {
-            final EphemeralCache.CacheEntry<ParsedMasterMedia> entry = playlistCache.getOrCompute(contentId,
+            final EphemeralCache.CacheEntry<MasterMedia> entry = playlistCache.getOrCompute(contentId,
                     id -> {
                         ParsedMasterMedia parsed = playlistParserService.parseMasterPlaylist(id);
 
@@ -65,7 +65,7 @@ public class PlaylistServiceIml implements PlaylistService {
 
 
             return new Playlist(
-                    new InputStreamResource(new ByteArrayInputStream(entry.value().masterPlaylist()))
+                    new InputStreamResource(new ByteArrayInputStream(entry.value().content()))
             );
 
         } catch (InterruptedException e) {
