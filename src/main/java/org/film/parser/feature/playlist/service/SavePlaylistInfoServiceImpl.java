@@ -1,12 +1,12 @@
 package org.film.parser.feature.playlist.service;
 
-import org.film.parser.feature.parser.playlist.data.ParsedMasterMedia;
-import org.film.parser.feature.playlist.client.FileStorageClient;
+import org.film.parser.feature.playlist.client.ContentPlaylistFileStorageClient;
+import org.film.parser.feature.playlist.client.MasterPlaylistFileStorageClient;
+import org.film.parser.feature.playlist.data.ContentPlaylistMedia;
 import org.film.parser.feature.playlist.data.MasterMedia;
 import org.film.parser.feature.playlist.data.MasterPlaylistMetadata;
 import org.film.parser.feature.playlist.data.StorageStatus;
 import org.film.parser.feature.playlist.repository.MasterPlaylistMetadataRepository;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,12 +16,16 @@ import java.io.ByteArrayInputStream;
 public class SavePlaylistInfoServiceImpl implements SavePlaylistInfoService {
 
     private final MasterPlaylistMetadataRepository playlistMetadataRepository;
-    private final FileStorageClient fileStorageClient;
+    private final MasterPlaylistFileStorageClient masterPlaylistFileStorageClient;
+
+    private final ContentPlaylistFileStorageClient contentPlaylistFileStorageClient;
 
     public SavePlaylistInfoServiceImpl(MasterPlaylistMetadataRepository playlistMetadataRepository,
-                                       FileStorageClient fileStorageClient) {
+                                       MasterPlaylistFileStorageClient masterPlaylistFileStorageClient,
+                                       ContentPlaylistFileStorageClient contentPlaylistFileStorageClient) {
         this.playlistMetadataRepository = playlistMetadataRepository;
-        this.fileStorageClient = fileStorageClient;
+        this.masterPlaylistFileStorageClient = masterPlaylistFileStorageClient;
+        this.contentPlaylistFileStorageClient = contentPlaylistFileStorageClient;
     }
 
 
@@ -35,8 +39,10 @@ public class SavePlaylistInfoServiceImpl implements SavePlaylistInfoService {
                                                                                                     .name())
                                                                 .masterPlaylistUrl(parsedMasterMedia.parsedMasterMedia()
                                                                                                     .parsedUrl())
-                                                                .minioObjectKey(fileStorageClient.generateMasterKey(String.valueOf(contentId)))
-                                                                .status(StorageStatus.PENDING).build();
+                                                                .minioObjectKey(masterPlaylistFileStorageClient.generateMasterKey(String.valueOf(contentId)))
+                                                                .parsedVariants(parsedMasterMedia.mediaVariants())
+                                                                .status(StorageStatus.PENDING)
+                                                                .build();
 
         if (playlistMetadataRepository.existsByContentId(contentId)) {
             playlistMetadataRepository.update(metadata);
@@ -44,9 +50,11 @@ public class SavePlaylistInfoServiceImpl implements SavePlaylistInfoService {
             playlistMetadataRepository.save(metadata);
         }
 
-        fileStorageClient.saveMasterPlaylist(String.valueOf(contentId), new ByteArrayInputStream(parsedMasterMedia.content()));
-        fileStorageClient.saveMasterPlaylist(String.valueOf(contentId), "parsed-index.m3u8", new ByteArrayInputStream(parsedMasterMedia.parsedMasterMedia()
-                                                                                                                                       .masterPlaylist()));
+        masterPlaylistFileStorageClient.saveMasterPlaylist(String.valueOf(contentId), new ByteArrayInputStream(parsedMasterMedia.content()));
     }
 
+    @Override
+    public void saveContentPlaylistInfo(long contentId, ContentPlaylistMedia contentPlaylistMedia) {
+        contentPlaylistFileStorageClient.save(contentId, contentPlaylistMedia.quality(), new ByteArrayInputStream(contentPlaylistMedia.content()));
+    }
 }

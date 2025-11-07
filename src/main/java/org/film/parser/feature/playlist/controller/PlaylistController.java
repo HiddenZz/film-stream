@@ -1,6 +1,5 @@
 package org.film.parser.feature.playlist.controller;
 
-import jakarta.websocket.server.PathParam;
 import org.film.parser.feature.parser.playlist.service.PlaylistParserService;
 import org.film.parser.feature.playlist.data.Playlist;
 import org.film.parser.feature.playlist.service.PlaylistService;
@@ -37,7 +36,19 @@ public class PlaylistController {
     @GetMapping("/{movieId}/index.m3u8")
     public ResponseEntity<Resource> getPlaylist(@PathVariable() long movieId) {
 
-        final Playlist playlist = playlistService.getPlaylist(movieId, "movie");
+        final Playlist playlist = playlistService.getMasterPlaylist(movieId, "movie");
+
+        if (playlist == null) {
+            return ResponseEntity.noContent().build();
+        }
+
+        return ResponseEntity.ok().body(playlist.content());
+    }
+
+    @GetMapping("/{movieId}/{quality}/index.m3u8")
+    public ResponseEntity<Resource> getPlaylist(@PathVariable() long movieId,
+                                                @PathVariable() int quality) {
+        final Playlist playlist = playlistService.getMediaPlaylist(movieId, quality);
 
         if (playlist == null) {
             return ResponseEntity.noContent().build();

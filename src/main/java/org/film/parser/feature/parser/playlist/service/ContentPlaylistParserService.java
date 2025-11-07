@@ -1,11 +1,11 @@
 package org.film.parser.feature.parser.playlist.service;
 
-import org.film.parser.feature.parser.playlist.data.ContentPlaylistMedia;
+import org.film.parser.core.util.resolver.Named;
+import org.film.parser.feature.parser.playlist.data.ParsedContentPlaylistMedia;
 import org.film.parser.feature.parser.playlist.data.ParsedMasterMedia;
 
-public interface ContentPlaylistParserService {
+public interface ContentPlaylistParserService extends Named {
 
-
-    ContentPlaylistMedia parse(ParsedMasterMedia parsedMasterMedia, String resolution);
+    ParsedContentPlaylistMedia parse(ParsedMasterMedia parsedMasterMedia, String url);
 
 }

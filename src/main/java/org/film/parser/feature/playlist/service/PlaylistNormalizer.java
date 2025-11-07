@@ -1,9 +1,11 @@
 package org.film.parser.feature.playlist.service;
 
 
+import org.film.parser.feature.playlist.data.MasterMediaNormalized;
+
 public interface PlaylistNormalizer {
 
 
-    byte[] normalizeMasterPlaylist(byte[] media);
+    MasterMediaNormalized normalizeMasterPlaylist(byte[] media);
 }
 

@@ -4,6 +4,7 @@ import org.film.parser.feature.playlist.data.Playlist;
 
 public interface PlaylistService {
 
-    Playlist getPlaylist(long contentId, String type);
+    Playlist getMasterPlaylist(long contentId, String type);
 
+    Playlist getMediaPlaylist(long contentId, int quality);
 }

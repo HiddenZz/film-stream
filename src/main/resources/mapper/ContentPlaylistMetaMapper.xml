@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.film.parser.feature.playlist.repository.mapper.ContentPlaylistMetaMapper">
+
+    <resultMap id="playlistMetadataResultMap" type="org.film.parser.feature.playlist.data.ContentMediaMeta">
+        <constructor>
+            <idArg column="id" javaType="int"/>
+            <arg column="playlist_id" javaType="int"/>
+            <arg column="quality" javaType="int"/>
+            <arg column="segment_index" javaType="int"/>
+            <arg column="segment_url" javaType="string"/>
+            <arg column="duration_seconds" javaType="double"/>
+            <arg column="offset_seconds" javaType="double"/>
+            <arg column="created_at" javaType="java.time.LocalDateTime"/>
+        </constructor>
+    </resultMap>
+
+
+</mapper>

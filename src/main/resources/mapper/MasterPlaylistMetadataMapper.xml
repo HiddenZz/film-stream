@@ -17,6 +17,8 @@
             <arg column="error_message" javaType="string"/>
             <arg column="created_at" javaType="java.time.LocalDateTime"/>
             <arg column="updated_at" javaType="java.time.LocalDateTime"/>
+            <arg column="parsed_medias" javaType="java.util.List"
+                 typeHandler="org.film.parser.feature.playlist.data.typehandler.MediaVariantListTypeHandler"/>
         </constructor>
     </resultMap>
 
@@ -30,7 +32,8 @@
                                               status,
                                               error_message,
                                               created_at,
-                                              updated_at)
+                                              updated_at,
+                                              parsed_medias)
         VALUES (#{contentId},
                 #{parserServiceName},
                 #{masterPlaylistUrl},
@@ -38,7 +41,8 @@
                 #{status, typeHandler=org.apache.ibatis.type.EnumTypeHandler},
                 #{errorMessage},
                 COALESCE(#{createdAt}, NOW()),
-                COALESCE(#{updatedAt}, NOW()))
+                COALESCE(#{updatedAt}, NOW()),
+                #{parsedVariants, typeHandler=MediaVariantListTypeHandler})
     </insert>
 
     <!-- SELECT: Поиск по ID -->
@@ -122,7 +126,8 @@
             minio_object_key    = #{minioObjectKey},
             status              = #{status, typeHandler=org.apache.ibatis.type.EnumTypeHandler},
             error_message       = #{errorMessage},
-            updated_at          = NOW()
+            updated_at          = NOW(),
+            parsed_medias       = #{parsedVariants, typeHandler=org.film.parser.feature.playlist.data.typehandler.MediaVariantListTypeHandler}
         WHERE content_id = #{contentId}
     </update>
 

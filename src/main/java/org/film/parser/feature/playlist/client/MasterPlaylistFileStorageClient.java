@@ -2,7 +2,7 @@ package org.film.parser.feature.playlist.client;
 
 import java.io.InputStream;
 
-public interface FileStorageClient {
+public interface MasterPlaylistFileStorageClient {
     boolean masterPlaylistExist(String name);
 
     InputStream getMasterPlaylist(String name);
@@ -14,5 +14,6 @@ public interface FileStorageClient {
     String generateMasterKey(String name, String fileName);
 
     String generateMasterKey(String name);
+
 
 }

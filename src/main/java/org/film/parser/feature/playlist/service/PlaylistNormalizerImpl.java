@@ -6,6 +6,9 @@ import io.lindstrom.m3u8.model.Variant;
 import io.lindstrom.m3u8.parser.MasterPlaylistParser;
 import io.lindstrom.m3u8.parser.ParsingMode;
 import lombok.extern.slf4j.Slf4j;
+import org.film.parser.feature.playlist.data.MasterMedia;
+import org.film.parser.feature.playlist.data.MasterMediaNormalized;
+import org.film.parser.feature.playlist.data.MediaVariant;
 import org.film.parser.feature.playlist.data.exceptions.PlaylistNormalizeContentException;
 import org.springframework.stereotype.Service;
 
@@ -26,17 +29,26 @@ public class PlaylistNormalizerImpl implements PlaylistNormalizer {
     }
 
     @Override
-    public byte[] normalizeMasterPlaylist(byte[] media) {
+    public MasterMediaNormalized normalizeMasterPlaylist(byte[] media) {
         try {
-            String playlistContent = new String(media, StandardCharsets.UTF_8);
+            String content = new String(media, StandardCharsets.UTF_8);
 
-            MasterPlaylist masterPlaylist = parser.readPlaylist(playlistContent);
+            final MasterPlaylist playlist = parser.readPlaylist(content);
 
-            MasterPlaylist normalizedPlaylist = normalizeMasterPlaylist(masterPlaylist);
 
-            String normalizedContent = parser.writePlaylistAsString(normalizedPlaylist);
+            final MasterPlaylist masterPlaylist = MasterPlaylist.builder()
+                                                                .from(playlist)
+                                                                .variants(normalizeVariants(playlist.variants()))
+                                                                .build();
 
-            return normalizedContent.getBytes(StandardCharsets.UTF_8);
+            String normalizedContent = parser.writePlaylistAsString(masterPlaylist);
+
+            return new MasterMediaNormalized(normalizedContent.getBytes(StandardCharsets.UTF_8), playlist.variants()
+                                                                                                         .stream()
+                                                                                                         .flatMap(variant -> variant.resolution()
+                                                                                                                                    .stream()
+                                                                                                                                    .map(resolution -> new MediaVariant(resolution.height(), variant.uri())))
+                                                                                                         .toList());
 
         } catch (Exception e) {
             log.error("Failed to normalize playlist Error: {}", e.getMessage(), e);
@@ -44,18 +56,12 @@ public class PlaylistNormalizerImpl implements PlaylistNormalizer {
         }
     }
 
-
-    private MasterPlaylist normalizeMasterPlaylist(MasterPlaylist playlist) {
-        List<Variant> normalizedVariants = playlist.variants().stream()
-                                                   .map(this::normalizeVariant)
-                                                   .distinct()
-                                                   .sorted(Comparator.comparing(Variant::bandwidth).reversed())
-                                                   .toList();
-
-        return MasterPlaylist.builder()
-                             .from(playlist)
-                             .variants(normalizedVariants)
-                             .build();
+    private List<Variant> normalizeVariants(List<Variant> variants) {
+        return variants.stream()
+                       .map(this::normalizeVariant)
+                       .distinct()
+                       .sorted(Comparator.comparing(Variant::bandwidth).reversed())
+                       .toList();
     }
 
 

@@ -45,6 +45,7 @@ mybatis:
     map-underscore-to-camel-case: true
     default-enum-type-handler: org.apache.ibatis.type.EnumTypeHandler
     log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+  type-handlers-package: org.film.parser.feature.playlist.data.typehandler
 
 logging:
   level:

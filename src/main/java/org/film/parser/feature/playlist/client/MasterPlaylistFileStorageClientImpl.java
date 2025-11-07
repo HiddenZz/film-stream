@@ -1,7 +1,9 @@
 package org.film.parser.feature.playlist.client;
 
-import io.minio.BucketExistsArgs;
+import io.minio.GetObjectArgs;
 import io.minio.MinioClient;
+import io.minio.PutObjectArgs;
+import io.minio.StatObjectArgs;
 import lombok.extern.slf4j.Slf4j;
 import org.film.parser.feature.configuration.properties.MinioProperties;
 import org.film.parser.feature.playlist.data.exceptions.NoSuchFileException;
@@ -12,11 +14,11 @@ import java.io.InputStream;
 
 @Component
 @Slf4j
-public class MinioClientImpl implements FileStorageClient {
+public class MasterPlaylistFileStorageClientImpl implements MasterPlaylistFileStorageClient {
     private final MinioProperties minioProperties;
     private final MinioClient minioClient;
 
-    MinioClientImpl(MinioProperties minioProperties, MinioClient minioClient) {
+    MasterPlaylistFileStorageClientImpl(MinioProperties minioProperties, MinioClient minioClient) {
         this.minioProperties = minioProperties;
         this.minioClient = minioClient;
     }
@@ -27,15 +29,15 @@ public class MinioClientImpl implements FileStorageClient {
         final String objectName = generateMasterKey(name);
         try {
             minioClient.statObject(
-                    io.minio.StatObjectArgs.builder()
-                                           .bucket(minioProperties.topPrefix())
-                                           .object(generateMasterKey(name))
-                                           .build()
+                    StatObjectArgs.builder()
+                                  .bucket(minioProperties.topPrefix())
+                                  .object(objectName)
+                                  .build()
             );
 
             return true;
         } catch (Exception e) {
-            log.error("Error checking if file exists in Minio. Bucket: {}, Object: {}. Error: {}",
+            log.warn("Error checking if file exists in Minio. Bucket: {}, Object: {}. Error: {}",
                     minioProperties.topPrefix(), objectName, e.getMessage());
             return false;
         }
@@ -46,10 +48,10 @@ public class MinioClientImpl implements FileStorageClient {
         final String objectName = generateMasterKey(name);
         try {
             return minioClient.getObject(
-                    io.minio.GetObjectArgs.builder()
-                                          .bucket(minioProperties.topPrefix())
-                                          .object(generateMasterKey(name))
-                                          .build()
+                    GetObjectArgs.builder()
+                                 .bucket(minioProperties.topPrefix())
+                                 .object(objectName)
+                                 .build()
             );
         } catch (Exception e) {
             log.error("Error retrieving file from Minio. Bucket: {}, Object: {}. Error: {}",
@@ -71,12 +73,12 @@ public class MinioClientImpl implements FileStorageClient {
         try {
 
             minioClient.putObject(
-                    io.minio.PutObjectArgs.builder()
-                                          .bucket(minioProperties.topPrefix())
-                                          .object(objectName)
-                                          .stream(inputStream, -1, 10485760)
-                                          .contentType("application/vnd.apple.mpegurl")
-                                          .build()
+                    PutObjectArgs.builder()
+                                 .bucket(minioProperties.topPrefix())
+                                 .object(objectName)
+                                 .stream(inputStream, -1, 10485760)
+                                 .contentType("application/vnd.apple.mpegurl")
+                                 .build()
             );
         } catch (Exception e) {
             log.error("Error saving file to Minio. Bucket: {}, Object: {}. Error: {}",
@@ -91,8 +93,10 @@ public class MinioClientImpl implements FileStorageClient {
         return generateMasterKey(name, minioProperties.hlsName());
     }
 
+
     @Override
     public String generateMasterKey(String name, String fileName) {
         return "%s/%s".formatted(name, fileName);
     }
+
 }

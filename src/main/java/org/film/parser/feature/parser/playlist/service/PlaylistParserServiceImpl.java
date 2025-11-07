@@ -1,8 +1,10 @@
 package org.film.parser.feature.parser.playlist.service;
 
 import lombok.extern.slf4j.Slf4j;
+import org.film.parser.core.util.resolver.ServiceResolver;
 import org.film.parser.feature.parser.playlist.client.PlaylistParserClient;
 import org.film.parser.feature.parser.playlist.data.AvailablePlayer;
+import org.film.parser.feature.parser.playlist.data.ParsedContentPlaylistMedia;
 import org.film.parser.feature.parser.playlist.data.ParsedMasterMedia;
 import org.springframework.stereotype.Service;
 
@@ -13,12 +15,15 @@ import java.util.*;
 public class PlaylistParserServiceImpl implements PlaylistParserService {
 
     private final PlaylistParserClient parserClient;
-    private final MasterPlaylistParserResolver masterPlaylistparserResolver;
+    private final ServiceResolver<MasterPlaylistParserService> masterPlaylistParserResolver;
+    private final ServiceResolver<ContentPlaylistParserService> contentPlaylistParserResolver;
 
     public PlaylistParserServiceImpl(PlaylistParserClient parserClient,
-                                     MasterPlaylistParserResolver masterPlaylistparserResolver) {
+                                     ServiceResolver<MasterPlaylistParserService> masterPlaylistParserResolver,
+                                     ServiceResolver<ContentPlaylistParserService> contentPlaylistParserResolver) {
         this.parserClient = parserClient;
-        this.masterPlaylistparserResolver = masterPlaylistparserResolver;
+        this.masterPlaylistParserResolver = masterPlaylistParserResolver;
+        this.contentPlaylistParserResolver = contentPlaylistParserResolver;
     }
 
 
@@ -30,10 +35,9 @@ public class PlaylistParserServiceImpl implements PlaylistParserService {
             throw new RuntimeException("List master playlist not found");
         }
 
-
         return availablePlayers.stream()
                                .map(player -> {
-                                   MasterPlaylistParserService parser = masterPlaylistparserResolver.resolveMasterParser(player.name());
+                                   MasterPlaylistParserService parser = masterPlaylistParserResolver.resolve(player.name());
                                    if (parser == null) return null;
 
                                    return tryParse(parser, player, id);
@@ -44,6 +48,16 @@ public class PlaylistParserServiceImpl implements PlaylistParserService {
 
     }
 
+    @Override
+    public ParsedContentPlaylistMedia parseContentPlaylist(long id, String url, String serviceName) {
+        return contentPlaylistParserResolver
+                .resolve(serviceName)
+                .parse(
+                        parseMasterPlaylist(id),
+                        url
+                );
+    }
+
     private ParsedMasterMedia tryParse(MasterPlaylistParserService parser, AvailablePlayer player, long id) {
         try {
             return parser.parse(player.iframe(), id);
@@ -52,5 +66,4 @@ public class PlaylistParserServiceImpl implements PlaylistParserService {
             return null;
         }
     }
-
 }

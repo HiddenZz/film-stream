@@ -1,52 +1,58 @@
 package org.film.parser.feature.parser.playlist.service;
 
 import lombok.extern.slf4j.Slf4j;
-import org.film.parser.feature.parser.playlist.data.ContentPlaylistMedia;
+import org.film.parser.feature.configuration.properties.external.LumexConfig;
+import org.film.parser.feature.parser.playlist.data.ParsedContentPlaylistMedia;
 import org.film.parser.feature.parser.playlist.data.ParsedMasterMedia;
 import org.film.parser.feature.parser.playlist.data.exceptions.ContentParseException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
 
 @Slf4j
 @Service
 public class LumexContentPlaylistParserService implements ContentPlaylistParserService {
     final RestClient restClient;
 
-    public LumexContentPlaylistParserService(RestClient lumexRestClient) {
+    final String name;
+
+    public LumexContentPlaylistParserService(RestClient lumexRestClient, LumexConfig config) {
         this.restClient = lumexRestClient;
+        this.name = config.name();
     }
 
     @Override
-    public ContentPlaylistMedia parse(ParsedMasterMedia parsedMasterMedia, String resolution) {
+    public ParsedContentPlaylistMedia parse(ParsedMasterMedia parsedMasterMedia, String url) {
         try {
-            final byte[] playlistData = fetchContentPlaylist(parsedMasterMedia, resolution);
+            final byte[] playlistData = fetchContentPlaylist(parsedMasterMedia, url);
 
             String playlistContent = new String(playlistData, StandardCharsets.UTF_8);
             log.debug("Playlist content: {}", playlistContent);
 
-            return ContentPlaylistMedia.builder()
-                                       .name("lumex")
-                                       .contentPlaylist(playlistData)
-                                       .parsedUrl(parsedMasterMedia.parsedUrl())
-                                       .resolution(resolution)
-                                       .build();
+            return ParsedContentPlaylistMedia.builder()
+                                             .name("lumex")
+                                             .contentPlaylist(playlistData)
+                                             .build();
 
         } catch (ContentParseException e) {
             throw e;
         } catch (Exception e) {
-            log.error("Failed parsing lumex content playlist for media: {} with resolution: {}", parsedMasterMedia, resolution, e);
+            log.error("Failed parsing lumex content playlist for media: {} with url: {}", parsedMasterMedia, url, e);
             throw new ContentParseException();
         }
     }
 
-    byte[] fetchContentPlaylist(ParsedMasterMedia parsedMasterMedia, String resolution) {
+    @Override
+    public String getName() {
+        return name;
+    }
 
-        final String url = normalizeUrl(parsedMasterMedia.parsedUrl(), resolution);
+    byte[] fetchContentPlaylist(ParsedMasterMedia parsedMasterMedia, String urlPart) {
+
+        final String url = normalizeUrl(parsedMasterMedia.parsedUrl(), urlPart);
 
         final ResponseEntity<byte[]> response = restClient.get()
                                                           .uri(url)
@@ -61,16 +67,14 @@ public class LumexContentPlaylistParserService implements ContentPlaylistParserS
     }
 
 
-    String normalizeUrl(String masterUrl, String resolution) {
-
-        final ArrayList<String> parts = new ArrayList<>(Arrays.asList(masterUrl.split("/")));
-
-        if (parts.getLast().contains(".m3u8")) {
-            final String lastPart = String.format("%s/%s", resolution, parts.removeLast());
-
-            return String.format("%s/%s", String.join("/", parts), lastPart);
+    String normalizeUrl(String masterUrl, String urlPart) {
+        try {
+            URI base = new URI(masterUrl);
+            URI resolved = base.resolve(urlPart);
+            return resolved.toString();
+        } catch (Exception e) {
+            log.error("Failed to normalize URL: {} with part: {}", masterUrl, urlPart, e);
+            throw new ContentParseException();
         }
-
-        return "";
     }
 }

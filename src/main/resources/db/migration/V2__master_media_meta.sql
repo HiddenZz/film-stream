@@ -8,7 +8,8 @@ CREATE TABLE master_playlist_metadata
     status              VARCHAR(20)   NOT NULL DEFAULT 'PENDING',
     error_message       TEXT,
     created_at          TIMESTAMP              DEFAULT NOW(),
-    updated_at          TIMESTAMP              DEFAULT NOW()
+    updated_at          TIMESTAMP              DEFAULT NOW(),
+    parsed_medias       JSONB
 );
 
 CREATE INDEX idx_status ON master_playlist_metadata (status);
