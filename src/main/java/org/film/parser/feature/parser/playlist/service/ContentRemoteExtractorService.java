@@ -18,7 +18,6 @@ public class ContentRemoteExtractorService implements ContentExtractorService {
 
     @Override
     public byte[] extract(String path) {
-
         try {
             final ResponseEntity<byte[]> response = restClient.get().uri(path).retrieve().toEntity(byte[].class);
             return response.getBody();

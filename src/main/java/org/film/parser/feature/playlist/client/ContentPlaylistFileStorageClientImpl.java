@@ -27,60 +27,55 @@ public class ContentPlaylistFileStorageClientImpl implements ContentPlaylistFile
     }
 
     @Override
-    public boolean exists(long contentId, int quality) {
-        final String mediaKey = generateMediaKey(contentId, quality);
+    public boolean exists(String path) {
 
         try {
             minioClient.statObject(
                     StatObjectArgs.builder()
                                   .bucket(minioProperties.topPrefix())
-                                  .object(mediaKey)
+                                  .object(path)
                                   .build()
             );
 
             return true;
         } catch (Exception e) {
             log.warn("Error checking if file exists in Minio. Bucket: {}, Object: {}. Error: {}",
-                    minioProperties.topPrefix(), contentId, e.getMessage());
+                    minioProperties.topPrefix(), path, e.getMessage());
             return false;
         }
     }
 
     @Override
-    public void save(long contentId, int quality, InputStream inputStream) {
-        final String mediaKey = generateMediaKey(contentId, quality);
+    public void save(String path, InputStream inputStream) {
         try {
-            minioClient.putObject(PutObjectArgs.builder().bucket(minioProperties.topPrefix())
+            minioClient.putObject(PutObjectArgs.builder()
+                                               .bucket(minioProperties.topPrefix())
+                                               .object(path)
                                                .stream(inputStream, -1, 10485760)
-                                               .contentType("application/vnd.apple.mpegurl")
                                                .build());
 
         } catch (Exception e) {
             log.error("Error saving file to Minio. Bucket: {}, Object: {}. Error: {}",
-                    minioProperties.topPrefix(), contentId, e.getMessage());
-            throw new SaveFileException("Failed to save content playlist file", mediaKey, e);
+                    minioProperties.topPrefix(), path, e.getMessage());
+            throw new SaveFileException("Failed to save content playlist file", path, e);
         }
     }
 
     @Override
-    public InputStream get(long contentId, int quality) {
-        final String mediaKey = generateMediaKey(contentId, quality);
+    public InputStream get(String path) {
         try {
             return minioClient.getObject(
                     GetObjectArgs.builder()
                                  .bucket(minioProperties.topPrefix())
-                                 .object(mediaKey)
+                                 .object(path)
                                  .build()
             );
         } catch (Exception e) {
             log.error("Error retrieving file from Minio. Bucket: {}, Object: {}. Error: {}",
-                    minioProperties.topPrefix(), mediaKey, e.getMessage());
-            throw new NoSuchFileException("No content playlist file in bucket", mediaKey, e);
+                    minioProperties.topPrefix(), path, e.getMessage());
+            throw new NoSuchFileException("No content playlist file in bucket", path, e);
         }
     }
 
 
-    private String generateMediaKey(long contentId, int quality) {
-        return "%s/%s/%s".formatted(contentId, quality, minioProperties.hlsName());
-    }
 }

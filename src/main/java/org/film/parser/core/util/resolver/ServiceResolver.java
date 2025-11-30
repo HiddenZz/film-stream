@@ -1,7 +1,5 @@
 package org.film.parser.core.util.resolver;
 
-import org.film.parser.feature.parser.playlist.service.MasterPlaylistParserService;
-
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;

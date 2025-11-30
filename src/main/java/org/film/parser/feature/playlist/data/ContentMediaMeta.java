@@ -6,13 +6,11 @@ import java.time.LocalDateTime;
 
 @Builder
 public record ContentMediaMeta(
-        int id,
-        int playlistId,
-        int quality,
+        long id,
+        long contentId,
         int segmentIndex,
-        String segmentUrl,
-        double durationSeconds,
-        double offsetSeconds,
+        String mediaPath,
+        String fallbackUrl,
         LocalDateTime createdAt
 ) {
 }

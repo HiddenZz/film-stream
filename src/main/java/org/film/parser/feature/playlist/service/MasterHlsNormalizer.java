@@ -3,9 +3,8 @@ package org.film.parser.feature.playlist.service;
 
 import org.film.parser.feature.playlist.data.MasterMediaNormalized;
 
-public interface PlaylistNormalizer {
+public interface MasterHlsNormalizer {
 
-
-    MasterMediaNormalized normalizeMasterPlaylist(byte[] media);
+    MasterMediaNormalized normalize(byte[] media, long contentId);
 }
 

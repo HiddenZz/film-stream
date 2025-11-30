@@ -40,32 +40,31 @@ public class EphemeralCache<Key, Value> {
                         cacheName, key, entry.isSaving() ? "IN_PROGRESS" : "COMPLETED");
 
                 return entry;
+            }).whenCompleteAsync((result, ex) -> {
+                cache.remove(key);
+
+                if (ex == null) {
+                    log.debug("[{}] Save completed successfully for key: {}. Evicted from cache.", cacheName, key);
+                } else {
+                    log.warn("[{}] Save failed for key: {}. Evicted from cache to prevent stale data.", cacheName, key);
+                }
             });
         });
     }
 
     private CompletableFuture<Void> saveAsync(Key key, Value value, Consumer<Value> valueSaver) {
         return CompletableFuture.runAsync(() -> {
-                                    try {
-                                        log.debug("[{}] Saving value for key: {}", cacheName, key);
-                                        valueSaver.accept(value);
-                                        log.info("[{}] Successfully saved value for key: {}", cacheName, key);
-                                    } catch (Exception e) {
-                                        log.error("[{}] Failed to save value for key: {}. Error: {}",
-                                                cacheName, key, e.getMessage(), e);
-                                        throw new RuntimeException("Save failed for key: " + key, e);
-                                    }
-                                }, saveExecutor)
-                                .whenCompleteAsync((result, ex) -> {
-                                    // Ephemeral eviction: remove from cache after save completes
-                                    cache.remove(key);
+            try {
+                log.debug("[{}] Saving value for key: {}", cacheName, key);
+                valueSaver.accept(value);
+                log.info("[{}] Successfully saved value for key: {}", cacheName, key);
+            } catch (Exception e) {
+                log.error("[{}] Failed to save value for key: {}. Error: {}",
+                        cacheName, key, e.getMessage(), e);
+                throw new RuntimeException("Save failed for key: " + key, e);
+            }
+        }, saveExecutor);
 
-                                    if (ex == null) {
-                                        log.debug("[{}] Save completed successfully for key: {}. Evicted from cache.", cacheName, key);
-                                    } else {
-                                        log.warn("[{}] Save failed for key: {}. Evicted from cache to prevent stale data.", cacheName, key);
-                                    }
-                                });
     }
 
     public void invalidate(Key key) {

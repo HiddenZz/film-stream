@@ -1,12 +1,18 @@
 network:
   rest-template:
-    parse-host: "https://api4.rhhhhhhh.live/"
+    parse-host: "https://api4.rhserv.vu/"
 
 parsers:
   movie:
     lumex:
       name: "videocdn"
       host: "https://api.lumex.space"
+    veveo:
+      api-token-header-name: "dle-api-token"
+      content-map-url: "https://api.rstprgapipt.com/dle-plugin/balancer-api/proxy/playlists/catalog-api/episodes"
+      query-param-for-request-content: "content-id"
+      query-param-movie-id-for-parse-name: "movie_id"
+      name: "veoveo50"
 
 
 storage:

@@ -47,3 +47,6 @@ bin/
 docker-compose.override.yml
 docker/local.env
 docker/miniosolo/
+
+### Meta ###
+task.md

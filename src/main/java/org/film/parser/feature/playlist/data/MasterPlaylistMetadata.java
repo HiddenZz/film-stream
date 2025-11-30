@@ -24,7 +24,24 @@ public record MasterPlaylistMetadata(
     public String getUrlByQuality(int quality) {
         return parsedVariants.stream()
                              .filter(variant -> variant.resolution() == quality)
-                             .map(MediaVariant::path)
+                             .map(MediaVariant::fallbackUrl)
+                             .findFirst()
+                             .orElse(null);
+    }
+
+    public String getUrlByNormalizedPath(String normalizedPath) {
+        return parsedVariants.stream()
+                             .filter(variant -> variant.normalizedPath() != null &&
+                                              variant.normalizedPath().equals(normalizedPath))
+                             .map(MediaVariant::fallbackUrl)
+                             .findFirst()
+                             .orElse(null);
+    }
+
+    public MediaVariant getVariantByNormalizedPath(String normalizedPath) {
+        return parsedVariants.stream()
+                             .filter(variant -> variant.normalizedPath() != null &&
+                                              variant.normalizedPath().equals(normalizedPath))
                              .findFirst()
                              .orElse(null);
     }

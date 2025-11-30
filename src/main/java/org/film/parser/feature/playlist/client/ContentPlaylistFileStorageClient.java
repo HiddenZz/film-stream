@@ -4,9 +4,9 @@ import java.io.InputStream;
 
 public interface ContentPlaylistFileStorageClient {
 
-    boolean exists(long contentId, int quality);
+    boolean exists(String path);
 
-    void save(long contentId, int quality, InputStream inputStream);
+    void save(String path, InputStream inputStream);
 
-    InputStream get(long contentId, int quality);
+    InputStream get(String path);
 }

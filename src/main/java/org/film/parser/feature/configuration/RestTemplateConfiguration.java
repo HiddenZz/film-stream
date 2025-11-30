@@ -51,6 +51,12 @@ public class RestTemplateConfiguration {
 
 
     @Bean
+    RestClient veveoRestClient() {
+        return RestClient.builder().build();
+    }
+
+
+    @Bean
     RestClient proxyRestClient() throws NoSuchAlgorithmException, KeyManagementException {
         TrustManager[] trustAllCerts = new TrustManager[]{
                 new X509TrustManager() {

@@ -17,5 +17,23 @@ services:
       timeout: 20s
       retries: 3
 
+  postgres:
+    image: postgres:17.3
+    container_name: postgres_container
+    restart: always
+    environment:
+      POSTGRES_USER: movie_user
+      POSTGRES_PASSWORD: movie
+      POSTGRES_DB: movie
+    ports:
+      - "5432:5432"
+    networks:
+      - postgres_network
+
+
+networks:
+  postgres_network:
+
 volumes:
   minio_dev_data:
+  postgres_data:

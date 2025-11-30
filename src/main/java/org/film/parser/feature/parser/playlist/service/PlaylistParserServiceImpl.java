@@ -15,11 +15,11 @@ import java.util.*;
 public class PlaylistParserServiceImpl implements PlaylistParserService {
 
     private final PlaylistParserClient parserClient;
-    private final ServiceResolver<MasterPlaylistParserService> masterPlaylistParserResolver;
+    private final ServiceResolver<MasterPlaylistParser> masterPlaylistParserResolver;
     private final ServiceResolver<ContentPlaylistParserService> contentPlaylistParserResolver;
 
     public PlaylistParserServiceImpl(PlaylistParserClient parserClient,
-                                     ServiceResolver<MasterPlaylistParserService> masterPlaylistParserResolver,
+                                     ServiceResolver<MasterPlaylistParser> masterPlaylistParserResolver,
                                      ServiceResolver<ContentPlaylistParserService> contentPlaylistParserResolver) {
         this.parserClient = parserClient;
         this.masterPlaylistParserResolver = masterPlaylistParserResolver;
@@ -37,7 +37,7 @@ public class PlaylistParserServiceImpl implements PlaylistParserService {
 
         return availablePlayers.stream()
                                .map(player -> {
-                                   MasterPlaylistParserService parser = masterPlaylistParserResolver.resolve(player.name());
+                                   MasterPlaylistParser parser = masterPlaylistParserResolver.resolve(player.name());
                                    if (parser == null) return null;
 
                                    return tryParse(parser, player, id);
@@ -49,16 +49,17 @@ public class PlaylistParserServiceImpl implements PlaylistParserService {
     }
 
     @Override
-    public ParsedContentPlaylistMedia parseContentPlaylist(long id, String url, String serviceName) {
+    public ParsedContentPlaylistMedia parseContentPlaylist(long id, String masterHlsUrl, String contentUrl,
+                                                           String serviceName) {
         return contentPlaylistParserResolver
                 .resolve(serviceName)
                 .parse(
-                        parseMasterPlaylist(id),
-                        url
+                        masterHlsUrl,
+                        contentUrl
                 );
     }
 
-    private ParsedMasterMedia tryParse(MasterPlaylistParserService parser, AvailablePlayer player, long id) {
+    private ParsedMasterMedia tryParse(MasterPlaylistParser parser, AvailablePlayer player, long id) {
         try {
             return parser.parse(player.iframe(), id);
         } catch (Exception e) {

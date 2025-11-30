@@ -6,6 +6,8 @@ import org.film.parser.feature.playlist.data.ContentPlaylistMedia;
 import org.film.parser.feature.playlist.data.MasterMedia;
 import org.film.parser.feature.playlist.data.MasterPlaylistMetadata;
 import org.film.parser.feature.playlist.data.StorageStatus;
+import org.film.parser.feature.playlist.repository.ContentHlsMetadataRepository;
+import org.film.parser.feature.playlist.repository.ContentHlsMetadataRepositoryImpl;
 import org.film.parser.feature.playlist.repository.MasterPlaylistMetadataRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,14 +20,19 @@ public class SavePlaylistInfoServiceImpl implements SavePlaylistInfoService {
     private final MasterPlaylistMetadataRepository playlistMetadataRepository;
     private final MasterPlaylistFileStorageClient masterPlaylistFileStorageClient;
 
+
     private final ContentPlaylistFileStorageClient contentPlaylistFileStorageClient;
+    private final ContentHlsMetadataRepository contentHlsMetadataRepository;
 
     public SavePlaylistInfoServiceImpl(MasterPlaylistMetadataRepository playlistMetadataRepository,
                                        MasterPlaylistFileStorageClient masterPlaylistFileStorageClient,
-                                       ContentPlaylistFileStorageClient contentPlaylistFileStorageClient) {
+                                       ContentPlaylistFileStorageClient contentPlaylistFileStorageClient,
+                                       ContentHlsMetadataRepository contentHlsMetadataRepository
+    ) {
         this.playlistMetadataRepository = playlistMetadataRepository;
         this.masterPlaylistFileStorageClient = masterPlaylistFileStorageClient;
         this.contentPlaylistFileStorageClient = contentPlaylistFileStorageClient;
+        this.contentHlsMetadataRepository = contentHlsMetadataRepository;
     }
 
 
@@ -54,7 +61,11 @@ public class SavePlaylistInfoServiceImpl implements SavePlaylistInfoService {
     }
 
     @Override
-    public void saveContentPlaylistInfo(long contentId, ContentPlaylistMedia contentPlaylistMedia) {
-        contentPlaylistFileStorageClient.save(contentId, contentPlaylistMedia.quality(), new ByteArrayInputStream(contentPlaylistMedia.content()));
+    @Transactional
+    public void saveContentPlaylistInfo(String path, ContentPlaylistMedia contentPlaylistMedia) {
+        contentHlsMetadataRepository.saveAll(contentPlaylistMedia.contentVariants());
+
+        contentPlaylistFileStorageClient.save(path, new ByteArrayInputStream(contentPlaylistMedia.content()));
+        
     }
 }

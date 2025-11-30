@@ -1,5 +1,6 @@
 package org.film.parser.feature.playlist.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.film.parser.feature.parser.playlist.service.PlaylistParserService;
 import org.film.parser.feature.playlist.data.Playlist;
 import org.film.parser.feature.playlist.service.PlaylistService;
@@ -33,10 +34,9 @@ public class PlaylistController {
         return ResponseEntity.ok("good");
     }
 
-    @GetMapping("/{movieId}/index.m3u8")
-    public ResponseEntity<Resource> getPlaylist(@PathVariable() long movieId) {
-
-        final Playlist playlist = playlistService.getMasterPlaylist(movieId, "movie");
+    @GetMapping("/{contentId}/index.m3u8")
+    public ResponseEntity<Resource> getMasterPlaylist(@PathVariable long contentId) {
+        final Playlist playlist = playlistService.getMasterPlaylist(contentId, "movie");
 
         if (playlist == null) {
             return ResponseEntity.noContent().build();
@@ -45,10 +45,39 @@ public class PlaylistController {
         return ResponseEntity.ok().body(playlist.content());
     }
 
-    @GetMapping("/{movieId}/{quality}/index.m3u8")
-    public ResponseEntity<Resource> getPlaylist(@PathVariable() long movieId,
-                                                @PathVariable() int quality) {
-        final Playlist playlist = playlistService.getMediaPlaylist(movieId, quality);
+    @GetMapping("/content/{contentId}/**")
+    public ResponseEntity<Resource> getMediaContent(
+            @PathVariable long contentId,
+            HttpServletRequest request
+    ) {
+        final String fullPath = request.getServletPath();
+
+        if (fullPath.isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        final Playlist playlist = playlistService.getMediaPlaylistByPath(fullPath, contentId);
+
+        if (playlist == null) {
+            return ResponseEntity.noContent().build();
+        }
+
+        return ResponseEntity.ok().body(playlist.content());
+    }
+
+    @GetMapping("/movie/{contentId}/segment/**/**/seg-{index}.ts")
+    public ResponseEntity<Resource> getMovie(
+            @PathVariable long contentId,
+            @PathVariable int index,
+            HttpServletRequest request
+    ) {
+        final String fullPath = request.getServletPath();
+
+        if (fullPath.isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        final Playlist playlist = playlistService.getMediaPlaylistByPath(fullPath, contentId);
 
         if (playlist == null) {
             return ResponseEntity.noContent().build();

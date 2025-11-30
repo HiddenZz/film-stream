@@ -8,5 +8,5 @@ public interface SavePlaylistInfoService {
 
     void saveMasterPlaylistInfo(long contentId, MasterMedia parsedMasterMedia);
 
-    void saveContentPlaylistInfo(long contentId, ContentPlaylistMedia contentPlaylistMedia);
+    void saveContentPlaylistInfo(String path, ContentPlaylistMedia contentPlaylistMedia);
 }

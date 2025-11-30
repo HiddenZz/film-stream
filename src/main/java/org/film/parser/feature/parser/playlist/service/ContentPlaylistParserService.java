@@ -6,6 +6,6 @@ import org.film.parser.feature.parser.playlist.data.ParsedMasterMedia;
 
 public interface ContentPlaylistParserService extends Named {
 
-    ParsedContentPlaylistMedia parse(ParsedMasterMedia parsedMasterMedia, String url);
+    ParsedContentPlaylistMedia parse(String masterHlsUrl, String url);
 
 }

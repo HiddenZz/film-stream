@@ -7,6 +7,7 @@ public interface PlaylistParserService {
 
     ParsedMasterMedia parseMasterPlaylist(long id);
 
-    ParsedContentPlaylistMedia parseContentPlaylist(long id, String url, String serviceName);
+    ParsedContentPlaylistMedia parseContentPlaylist(long id, String masterHlsUrl, String contentUrl,
+                                                    String serviceName);
 
 }
