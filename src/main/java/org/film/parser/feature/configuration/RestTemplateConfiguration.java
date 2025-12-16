@@ -27,15 +27,22 @@ public class RestTemplateConfiguration {
 
     @Bean
     RestClient restClient(RestTemplateConfigurationProperties props) {
+        HttpClient jdkHttpClient = HttpClient.newBuilder()
+                                             .followRedirects(HttpClient.Redirect.NORMAL)
+                                             .connectTimeout(Duration.ofSeconds(5))
+                                             .build();
+
         return RestClient.builder()
-                         .baseUrl(props.getParseHost()).build();
+                         .requestFactory(new JdkClientHttpRequestFactory(jdkHttpClient))
+                         .baseUrl(props.getParseHost())
+                         .build();
     }
 
     @Bean
     RestClient lumexRestClient() {
         HttpClient jdkHttpClient = HttpClient.newBuilder()
                                              .followRedirects(HttpClient.Redirect.NORMAL)
-                                             .connectTimeout(Duration.ofSeconds(5))
+                                             .connectTimeout(Duration.ofSeconds(15))
                                              .cookieHandler(new CookieManager())
                                              .build();
 

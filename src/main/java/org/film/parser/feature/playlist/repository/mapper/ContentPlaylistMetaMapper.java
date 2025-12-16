@@ -11,7 +11,7 @@ public interface ContentPlaylistMetaMapper {
 
     int insertAll(List<ContentMediaMeta> list);
 
-    Optional<ContentMediaMeta> findByInfo(int id, int index, String mediaPath);
+    Optional<ContentMediaMeta> findByInfo(long id, int index, String mediaPath);
 
 
 }

@@ -5,21 +5,22 @@
 <mapper namespace="org.film.parser.feature.playlist.repository.mapper.ContentPlaylistMetaMapper">
 
     <resultMap id="playlistMetadataResultMap" type="org.film.parser.feature.playlist.data.ContentMediaMeta">
-        <constructor>
-            <idArg column="id" javaType="_long"/>
-            <arg column="content_id" javaType="_long"/>
-            <arg column="segment_index" javaType="int"/>
-            <arg column="media_path" javaType="string"/>
-            <arg column="fallback_url" javaType="string"/>
-            <arg column="created_at" javaType="java.time.LocalDateTime"/>
-        </constructor>
+        <id property="id" column="id"/>
+        <result property="contentId" column="content_id"/>
+        <result property="contentHlsFetchMetaId" column="content_hls_fetch_meta_id"/>
+        <result property="segmentIndex" column="segment_index"/>
+        <result property="mediaPath" column="media_path"/>
+        <result property="fallbackUrl" column="fallback_url"/>
+        <result property="createdAt" column="created_at"/>
     </resultMap>
 
     <insert id="insertAll" keyProperty="id">
-        INSERT INTO content_playlist_meta (content_id, segment_index, media_path, fallback_url)
+        INSERT INTO content_playlist_meta (content_id, segment_index, media_path, fallback_url,
+        content_hls_fetch_meta_id)
         VALUES
         <foreach collection="list" item="item" separator=",">
-            (#{item.contentId}, #{item.segmentIndex}, #{item.mediaPath}, #{item.fallbackUrl})
+            (#{item.contentId}, #{item.segmentIndex}, #{item.mediaPath}, #{item.fallbackUrl},
+            #{item.contentHlsFetchMetaId})
         </foreach>
         ON CONFLICT (content_id, segment_index, media_path)
         DO UPDATE SET
@@ -32,8 +33,7 @@
         FROM content_playlist_meta
         WHERE content_id = #{id}
           AND media_path = #{mediaPath}
-          AND segment_index = #{index}
-        LIMIT 1
+          AND segment_index = #{index} LIMIT 1
     </select>
 
 </mapper>

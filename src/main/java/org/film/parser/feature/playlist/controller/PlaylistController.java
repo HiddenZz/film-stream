@@ -65,10 +65,12 @@ public class PlaylistController {
         return ResponseEntity.ok().body(playlist.content());
     }
 
-    @GetMapping("/movie/{contentId}/segment/**/**/seg-{index}.ts")
+    @GetMapping("/movie/{contentId}/segment/{contentType}/{uniqId}/seg-{index}.ts")
     public ResponseEntity<Resource> getMovie(
             @PathVariable long contentId,
             @PathVariable int index,
+            @PathVariable String uniqId,
+            @PathVariable String contentType,
             HttpServletRequest request
     ) {
         final String fullPath = request.getServletPath();
@@ -77,7 +79,7 @@ public class PlaylistController {
             return ResponseEntity.badRequest().build();
         }
 
-        final Playlist playlist = playlistService.getMediaPlaylistByPath(fullPath, contentId);
+        final Playlist playlist = playlistService.getMovie(fullPath, contentId, index);
 
         if (playlist == null) {
             return ResponseEntity.noContent().build();

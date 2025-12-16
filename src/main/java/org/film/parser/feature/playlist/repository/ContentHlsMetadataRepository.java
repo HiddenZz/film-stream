@@ -9,5 +9,5 @@ public interface ContentHlsMetadataRepository {
 
     void saveAll(List<ContentMediaMeta> metaList);
 
-    Optional<ContentMediaMeta> findByInfo(int contentId, int segmentIndex, String mediaPath);
+    ContentMediaMeta findByInfo(long contentId, int segmentIndex, String mediaPath);
 }

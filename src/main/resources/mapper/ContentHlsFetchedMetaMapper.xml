@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.film.parser.feature.playlist.repository.mapper.ContentHlsFetchedMetaMapper">
+
+    <resultMap id="contentHlsResultMap" type="org.film.parser.feature.playlist.data.ContentHlsFetchedMeta">
+        <constructor>
+            <idArg column="id" javaType="_long"/>
+            <arg column="content_id" javaType="_long"/>
+            <arg column="url" javaType="string"/>
+            <arg column="service_name" javaType="string"/>
+        </constructor>
+    </resultMap>
+
+    <select id="insert" parameterType="org.film.parser.feature.playlist.data.ContentHlsFetchedMeta" resultType="int">
+        INSERT INTO content_hls_fetch_meta (content_id, url, service_name)
+        VALUES (#{contentId}, #{url}, #{serviceName}) RETURNING id
+    </select>
+
+    <select id="findById" resultMap="contentHlsResultMap">
+        SELECT *
+        FROM content_hls_fetch_meta
+        WHERE id = #{id}
+    </select>
+</mapper>

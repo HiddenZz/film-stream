@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.film.parser.feature.parser.playlist.data.ParsedContentPlaylistMedia;
 import org.film.parser.feature.parser.playlist.data.ParsedMasterMedia;
+import org.film.parser.feature.parser.playlist.service.ContentExtractorService;
 import org.film.parser.feature.parser.playlist.service.PlaylistParserService;
 import org.film.parser.feature.playlist.cache.EphemeralCache;
 import org.film.parser.feature.playlist.client.ContentPlaylistFileStorageClient;
@@ -12,10 +13,12 @@ import org.film.parser.feature.playlist.client.ContentPlaylistFileStorageClientI
 import org.film.parser.feature.playlist.client.MasterPlaylistFileStorageClient;
 import org.film.parser.feature.playlist.client.MasterPlaylistFileStorageClientImpl;
 import org.film.parser.feature.playlist.data.*;
+import org.film.parser.feature.playlist.repository.ContentHlsFetchedMetaRepository;
 import org.film.parser.feature.playlist.repository.ContentHlsMetadataRepository;
 import org.film.parser.feature.playlist.repository.MasterPlaylistMetadataRepository;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.stereotype.Service;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.ByteArrayInputStream;
 import java.util.concurrent.ExecutionException;
@@ -35,6 +38,8 @@ public class PlaylistServiceIml implements PlaylistService {
     private final MasterPlaylistMetadataRepository masterPlaylistMetadataRepository;
     private final ContentPlaylistFileStorageClientImpl contentPlaylistFileStorageClientImpl;
     private final ContentHlsMetadataRepository contentHlsMetadataRepository;
+    private final ContentExtractorService contentExtractorService;
+    private final ContentHlsFetchedMetaRepository contentHlsFetchedMetaRepository;
 
 
     @Override
@@ -96,7 +101,13 @@ public class PlaylistServiceIml implements PlaylistService {
                     contentId
             );
 
-            savePlaylistInfoService.saveContentPlaylistInfo(fullPath, normalizedContentPlaylist);
+            final ContentHlsFetchedMeta fetchedMeta = ContentHlsFetchedMeta.builder()
+                                                                           .url(parsedMedia.hlsUrl())
+                                                                           .serviceName(parsedMedia.name())
+                                                                           .contentId(contentId)
+                                                                           .build();
+
+            savePlaylistInfoService.saveContentPlaylistInfo(fullPath, fetchedMeta, normalizedContentPlaylist);
 
 
             return new Playlist(
@@ -122,9 +133,18 @@ public class PlaylistServiceIml implements PlaylistService {
         }
 
         try {
+            final ContentMediaMeta mediaMeta = contentHlsMetadataRepository.findByInfo(contentId, index, fullPath);
+            String url = mediaMeta.getFallbackUrl();
+            if (!UriComponentsBuilder.fromUriString(url).build().toUri().isAbsolute()) {
+                final ContentHlsFetchedMeta meta = contentHlsFetchedMetaRepository.findById(mediaMeta.getContentHlsFetchMetaId());
+                url = UriComponentsBuilder.fromUriString(meta.url())
+                                          .build().toUri().resolve(url).toString();
 
+            }
 
-            return null;
+            final byte[] movieData = contentExtractorService.extract(url);
+
+            return new Playlist(new InputStreamResource(new ByteArrayInputStream(movieData)));
         } catch (Exception e) {
             log.error("Failed to get movie for contentId: {}, path: {}", contentId, fullPath, e);
             throw new RuntimeException("Failed to get movie", e);

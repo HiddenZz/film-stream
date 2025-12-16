@@ -6,7 +6,6 @@ public interface PlaylistService {
 
     Playlist getMasterPlaylist(long contentId, String type);
 
-
     Playlist getMediaPlaylistByPath(String fullPath, long contentId);
 
     Playlist getMovie(String fullPath, long contentId, int index);

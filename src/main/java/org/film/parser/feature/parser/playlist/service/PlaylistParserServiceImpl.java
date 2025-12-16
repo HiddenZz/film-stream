@@ -63,7 +63,7 @@ public class PlaylistParserServiceImpl implements PlaylistParserService {
         try {
             return parser.parse(player.iframe(), id);
         } catch (Exception e) {
-            log.warn("Failed to parse with player: {}. Error: {}", player.name(), e.getMessage());
+            log.error("Failed to parse with player: {}", player.name(), e);
             return null;
         }
     }

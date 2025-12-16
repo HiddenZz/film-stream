@@ -12,7 +12,7 @@ parsers:
       content-map-url: "https://api.rstprgapipt.com/dle-plugin/balancer-api/proxy/playlists/catalog-api/episodes"
       query-param-for-request-content: "content-id"
       query-param-movie-id-for-parse-name: "movie_id"
-      name: "veoveo50"
+      name: "veoveo50-cdn"
 
 
 storage:

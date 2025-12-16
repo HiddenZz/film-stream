@@ -1,13 +1,11 @@
 package org.film.parser.feature.playlist.service;
 
+import lombok.AllArgsConstructor;
 import org.film.parser.feature.playlist.client.ContentPlaylistFileStorageClient;
 import org.film.parser.feature.playlist.client.MasterPlaylistFileStorageClient;
-import org.film.parser.feature.playlist.data.ContentPlaylistMedia;
-import org.film.parser.feature.playlist.data.MasterMedia;
-import org.film.parser.feature.playlist.data.MasterPlaylistMetadata;
-import org.film.parser.feature.playlist.data.StorageStatus;
+import org.film.parser.feature.playlist.data.*;
+import org.film.parser.feature.playlist.repository.ContentHlsFetchedMetaRepository;
 import org.film.parser.feature.playlist.repository.ContentHlsMetadataRepository;
-import org.film.parser.feature.playlist.repository.ContentHlsMetadataRepositoryImpl;
 import org.film.parser.feature.playlist.repository.MasterPlaylistMetadataRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.ByteArrayInputStream;
 
 @Service
+@AllArgsConstructor
 public class SavePlaylistInfoServiceImpl implements SavePlaylistInfoService {
 
     private final MasterPlaylistMetadataRepository playlistMetadataRepository;
@@ -24,16 +23,7 @@ public class SavePlaylistInfoServiceImpl implements SavePlaylistInfoService {
     private final ContentPlaylistFileStorageClient contentPlaylistFileStorageClient;
     private final ContentHlsMetadataRepository contentHlsMetadataRepository;
 
-    public SavePlaylistInfoServiceImpl(MasterPlaylistMetadataRepository playlistMetadataRepository,
-                                       MasterPlaylistFileStorageClient masterPlaylistFileStorageClient,
-                                       ContentPlaylistFileStorageClient contentPlaylistFileStorageClient,
-                                       ContentHlsMetadataRepository contentHlsMetadataRepository
-    ) {
-        this.playlistMetadataRepository = playlistMetadataRepository;
-        this.masterPlaylistFileStorageClient = masterPlaylistFileStorageClient;
-        this.contentPlaylistFileStorageClient = contentPlaylistFileStorageClient;
-        this.contentHlsMetadataRepository = contentHlsMetadataRepository;
-    }
+    private final ContentHlsFetchedMetaRepository contentHlsFetchedMetaRepository;
 
 
     @Override
@@ -62,10 +52,17 @@ public class SavePlaylistInfoServiceImpl implements SavePlaylistInfoService {
 
     @Override
     @Transactional
-    public void saveContentPlaylistInfo(String path, ContentPlaylistMedia contentPlaylistMedia) {
+    public void saveContentPlaylistInfo(String path, ContentHlsFetchedMeta fetchedMeta,
+                                        ContentPlaylistMedia contentPlaylistMedia) {
+        final int insertedFetchedMeta = contentHlsFetchedMetaRepository.insert(
+                fetchedMeta
+        );
+
+        contentPlaylistMedia.contentVariants().forEach(
+                variant -> variant.setContentHlsFetchMetaId(insertedFetchedMeta));
+
         contentHlsMetadataRepository.saveAll(contentPlaylistMedia.contentVariants());
 
         contentPlaylistFileStorageClient.save(path, new ByteArrayInputStream(contentPlaylistMedia.content()));
-        
     }
 }
