@@ -2,7 +2,7 @@ package org.film.parser.feature.parser.playlist.service.veveo;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import org.film.parser.feature.configuration.properties.external.VeveoConfig;
+import org.film.parser.core.configuration.properties.external.VeveoConfig;
 import org.film.parser.feature.parser.playlist.data.ParsedMasterMedia;
 import org.film.parser.feature.parser.playlist.data.VeveoCatalogEpisodes;
 import org.film.parser.feature.parser.playlist.data.exceptions.ParseMasterPlaylistException;
@@ -55,10 +55,10 @@ public class VeveoMasterHlsParser implements MasterPlaylistParser {
         final byte[] masterPlaylist = parseHls(masterHlsUrl, apiToken);
 
         return ParsedMasterMedia.builder()
-                                .masterPlaylist(masterPlaylist)
-                                .name(getName())
-                                .parsedUrl(masterHlsUrl)
-                                .build();
+                .masterPlaylist(masterPlaylist)
+                .name(getName())
+                .parsedUrl(masterHlsUrl)
+                .build();
     }
 
     @Override
@@ -70,16 +70,17 @@ public class VeveoMasterHlsParser implements MasterPlaylistParser {
     String parseUrlMasterHls(String contentId, String apiToken) {
         try {
             final URI uri = UriComponentsBuilder.fromUriString(config.contentMapUrl())
-                                                .queryParam(config.queryParamForRequestContent(), contentId)
-                                                .build()
-                                                .toUri();
+                    .queryParam(config.queryParamForRequestContent(), contentId)
+                    .build()
+                    .toUri();
 
             final List<Map<String, Object>> response = restClient.get()
-                                                                 .uri(uri)
-                                                                 .header(config.apiTokenHeaderName(), apiToken)
-                                                                 .header("Accept", "application/json")
-                                                                 .retrieve()
-                                                                 .body(new ParameterizedTypeReference<>() {});
+                    .uri(uri)
+                    .header(config.apiTokenHeaderName(), apiToken)
+                    .header("Accept", "application/json")
+                    .retrieve()
+                    .body(new ParameterizedTypeReference<>() {
+                    });
 
             if (response == null || response.isEmpty()) {
                 throw new ParseMasterPlaylistException("Empty response while parsing Veveo HLS playlist");
@@ -110,14 +111,14 @@ public class VeveoMasterHlsParser implements MasterPlaylistParser {
     byte[] parseHls(String url, String apiToken) {
         try {
             final URI uri = UriComponentsBuilder.fromUriString(url)
-                                                .build()
-                                                .toUri();
+                    .build()
+                    .toUri();
 
             return restClient.get()
-                             .uri(uri)
-                             .header(config.apiTokenHeaderName(), apiToken)
-                             .retrieve()
-                             .body(byte[].class);
+                    .uri(uri)
+                    .header(config.apiTokenHeaderName(), apiToken)
+                    .retrieve()
+                    .body(byte[].class);
 
         } catch (Exception e) {
             log.error("Failed to download Veveo HLS playlist for url: {}", url, e);
@@ -129,9 +130,9 @@ public class VeveoMasterHlsParser implements MasterPlaylistParser {
     String extractApiToken(String iframe) {
         try {
             final String html = restClient.get()
-                                          .uri(iframe)
-                                          .retrieve()
-                                          .body(String.class);
+                    .uri(iframe)
+                    .retrieve()
+                    .body(String.class);
             if (html == null) {
                 throw new RuntimeException("Empty HTML content for iframe: " + iframe);
             }

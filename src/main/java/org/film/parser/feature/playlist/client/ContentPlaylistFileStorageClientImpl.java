@@ -5,7 +5,7 @@ import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
 import io.minio.StatObjectArgs;
 import lombok.extern.slf4j.Slf4j;
-import org.film.parser.feature.configuration.properties.MinioProperties;
+import org.film.parser.core.configuration.properties.MinioProperties;
 import org.film.parser.feature.playlist.data.exceptions.NoSuchFileException;
 import org.film.parser.feature.playlist.data.exceptions.SaveFileException;
 import org.springframework.stereotype.Component;
@@ -32,15 +32,15 @@ public class ContentPlaylistFileStorageClientImpl implements ContentPlaylistFile
         try {
             minioClient.statObject(
                     StatObjectArgs.builder()
-                                  .bucket(minioProperties.topPrefix())
-                                  .object(path)
-                                  .build()
+                            .bucket(minioProperties.topPrefix())
+                            .object(path)
+                            .build()
             );
 
             return true;
         } catch (Exception e) {
             log.warn("Error checking if file exists in Minio. Bucket: {}, Object: {}. Error: {}",
-                    minioProperties.topPrefix(), path, e.getMessage());
+                     minioProperties.topPrefix(), path, e.getMessage());
             return false;
         }
     }
@@ -49,14 +49,14 @@ public class ContentPlaylistFileStorageClientImpl implements ContentPlaylistFile
     public void save(String path, InputStream inputStream) {
         try {
             minioClient.putObject(PutObjectArgs.builder()
-                                               .bucket(minioProperties.topPrefix())
-                                               .object(path)
-                                               .stream(inputStream, -1, 10485760)
-                                               .build());
+                                          .bucket(minioProperties.topPrefix())
+                                          .object(path)
+                                          .stream(inputStream, -1, 10485760)
+                                          .build());
 
         } catch (Exception e) {
             log.error("Error saving file to Minio. Bucket: {}, Object: {}. Error: {}",
-                    minioProperties.topPrefix(), path, e.getMessage());
+                      minioProperties.topPrefix(), path, e.getMessage());
             throw new SaveFileException("Failed to save content playlist file", path, e);
         }
     }
@@ -66,13 +66,13 @@ public class ContentPlaylistFileStorageClientImpl implements ContentPlaylistFile
         try {
             return minioClient.getObject(
                     GetObjectArgs.builder()
-                                 .bucket(minioProperties.topPrefix())
-                                 .object(path)
-                                 .build()
+                            .bucket(minioProperties.topPrefix())
+                            .object(path)
+                            .build()
             );
         } catch (Exception e) {
             log.error("Error retrieving file from Minio. Bucket: {}, Object: {}. Error: {}",
-                    minioProperties.topPrefix(), path, e.getMessage());
+                      minioProperties.topPrefix(), path, e.getMessage());
             throw new NoSuchFileException("No content playlist file in bucket", path, e);
         }
     }

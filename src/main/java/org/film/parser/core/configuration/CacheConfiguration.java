@@ -1,4 +1,4 @@
-package org.film.parser.feature.configuration;
+package org.film.parser.core.configuration;
 
 import org.film.parser.feature.parser.playlist.data.ParsedMasterMedia;
 import org.film.parser.feature.playlist.cache.EphemeralCache;

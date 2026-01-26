@@ -24,11 +24,23 @@ storage:
     buckets:
       top-prefix: content
       hls-name: "index.m3u8"
+  redis:
+    torrent-cache-per-seconds: 4000
+    download-stream: stream:download,
+    stream-message-head-key: data
+
+
+
+
+
+torrent:
+  jackett:
+    url: http://localhost:9117/api/v2.0/
+    apiKey: d20mpf01xc8p2j0o2feizx4w5p5p763r
 
 
 server:
   port: 8084
-
 
 spring:
   flyway:
@@ -41,6 +53,11 @@ spring:
     username: movie_user
     password: movie
     driver-class-name: org.postgresql.Driver
+  data:
+    redis:
+      client-type: Jedis
+      host: localhost
+      port: 6379
 
 
 # MyBatis Configuration

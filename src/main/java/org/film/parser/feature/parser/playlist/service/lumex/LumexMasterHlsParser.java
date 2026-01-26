@@ -7,7 +7,7 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.film.parser.core.util.SupplierWithException;
-import org.film.parser.feature.configuration.properties.external.LumexConfig;
+import org.film.parser.core.configuration.properties.external.LumexConfig;
 import org.film.parser.feature.parser.playlist.data.LumexContentPlayer;
 import org.film.parser.feature.parser.playlist.data.LumexResponse;
 import org.film.parser.feature.parser.playlist.data.ParsedMasterMedia;
@@ -52,7 +52,7 @@ public class LumexMasterHlsParser implements MasterPlaylistParser {
             final byte[] playlistData = downloadMasterPlaylist(parsedUrl);
 
             return ParsedMasterMedia.builder().name(name).masterPlaylist(playlistData).parsedUrl(parsedUrl.toString())
-                                    .build();
+                    .build();
         } catch (PlaylistDownloadException | ParseIframeException e) {
             throw e;
         } catch (Exception e) {
@@ -66,9 +66,9 @@ public class LumexMasterHlsParser implements MasterPlaylistParser {
         try {
 
             final ResponseEntity<byte[]> response = lumexRestClient.get()
-                                                                   .uri(playlistUri)
-                                                                   .retrieve()
-                                                                   .toEntity(byte[].class);
+                    .uri(playlistUri)
+                    .retrieve()
+                    .toEntity(byte[].class);
 
             if (response.getStatusCode().isError()) {
                 throw new PlaylistDownloadException("Failed to download master playlist: HTTP " + response.getStatusCode());
@@ -89,14 +89,15 @@ public class LumexMasterHlsParser implements MasterPlaylistParser {
 
 
             final ResponseEntity<String> response = requestWithRetry(() -> lumexRestClient.post()
-                                                                                          .uri(new URI(host + mediaUrl))
-                                                                                          .retrieve()
-                                                                                          .toEntity(String.class), 3);
+                    .uri(new URI(host + mediaUrl))
+                    .retrieve()
+                    .toEntity(String.class), 3);
             log.info("Body Parse Url master playlist response: {}", response.getBody());
 
 
-            final Object mapped = mapper.readValue(response.getBody(), new TypeReference<Map<String, Object>>() {})
-                                        .getOrDefault("url", "");
+            final Object mapped = mapper.readValue(response.getBody(), new TypeReference<Map<String, Object>>() {
+                    })
+                    .getOrDefault("url", "");
 
             if (mapped instanceof String result && !result.isEmpty()) {
                 return result;
@@ -136,13 +137,13 @@ public class LumexMasterHlsParser implements MasterPlaylistParser {
 
 
             final ResponseEntity<String> response = lumexRestClient.get()
-                                                                   .uri(buildUriForFetchMediaContent(segments))
-                                                                   .retrieve()
-                                                                   .toEntity(String.class);
+                    .uri(buildUriForFetchMediaContent(segments))
+                    .retrieve()
+                    .toEntity(String.class);
 
             final LumexContentPlayer player = mapper.readValue(response.getBody(), LumexResponse.class).player();
             final LumexContentPlayer.LumexContentPlayerMedia lumexContent = player.media().stream().findFirst()
-                                                                                  .orElse(null);
+                    .orElse(null);
 
             if (lumexContent == null) {
                 throw new ParseIframeException();
@@ -161,12 +162,12 @@ public class LumexMasterHlsParser implements MasterPlaylistParser {
     URI buildUriForFetchMediaContent(SegmentInfo segments) {
 
         return UriComponentsBuilder.fromUriString(host + "/content/")
-                                   .queryParam("clientId", segments.clientId)
-                                   .queryParam("contentType", segments.contentType)
-                                   .queryParam("contentId", segments.contentId)
-                                   .queryParam("domain", "reyohoho-gitlab.vercel.app")
-                                   .queryParam("url", "reyohoho-gitlab.vercel.app")
-                                   .build().toUri();
+                .queryParam("clientId", segments.clientId)
+                .queryParam("contentType", segments.contentType)
+                .queryParam("contentId", segments.contentId)
+                .queryParam("domain", "reyohoho-gitlab.vercel.app")
+                .queryParam("url", "reyohoho-gitlab.vercel.app")
+                .build().toUri();
     }
 
 
@@ -175,8 +176,8 @@ public class LumexMasterHlsParser implements MasterPlaylistParser {
             final URI uri = new URI("https:" + iframe);
 
             final String[] segments = Arrays.stream(uri.getPath().split("/"))
-                                            .filter(s -> !s.isBlank())
-                                            .toArray(String[]::new);
+                    .filter(s -> !s.isBlank())
+                    .toArray(String[]::new);
 
             if (segments.length < 1) {
                 throw new RuntimeException();

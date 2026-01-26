@@ -1,11 +1,11 @@
-package org.film.parser.feature.configuration.properties;
+package org.film.parser.core.configuration.properties;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @Data
 @ConfigurationProperties("storage.minio.credentials")
-public class MinIoClientConfigurationProperties {
+public class MinIoClientProperties {
     private String endpoint;
     private String name;
     private String password;

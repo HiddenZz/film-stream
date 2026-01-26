@@ -1,9 +1,8 @@
 package org.film.parser.feature.parser.playlist.service.lumex;
 
 import lombok.extern.slf4j.Slf4j;
-import org.film.parser.feature.configuration.properties.external.LumexConfig;
+import org.film.parser.core.configuration.properties.external.LumexConfig;
 import org.film.parser.feature.parser.playlist.data.ParsedContentPlaylistMedia;
-import org.film.parser.feature.parser.playlist.data.ParsedMasterMedia;
 import org.film.parser.feature.parser.playlist.data.exceptions.ContentParseException;
 import org.film.parser.feature.parser.playlist.service.ContentPlaylistParserService;
 import org.springframework.http.ResponseEntity;
@@ -11,7 +10,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
 import java.net.URI;
-import java.nio.charset.StandardCharsets;
 import java.util.concurrent.atomic.AtomicReference;
 
 @Slf4j
@@ -33,10 +31,10 @@ public class LumexContentHlsParser implements ContentPlaylistParserService {
             final FetchedData playlistData = fetchContentPlaylist(normalizedUrl);
 
             return ParsedContentPlaylistMedia.builder()
-                                             .name("lumex")
-                                             .hlsUrl(playlistData.fetchedUrl)
-                                             .contentPlaylist(playlistData.data)
-                                             .build();
+                    .name("lumex")
+                    .hlsUrl(playlistData.fetchedUrl)
+                    .contentPlaylist(playlistData.data)
+                    .build();
 
         } catch (ContentParseException e) {
             throw e;
@@ -55,13 +53,13 @@ public class LumexContentHlsParser implements ContentPlaylistParserService {
         final AtomicReference<URI> finalUri = new AtomicReference<>();
 
         final ResponseEntity<byte[]> response = restClient.get()
-                                                          .uri(url)
-                                                          .exchange(
-                                                                  (req, res) -> {
-                                                                      finalUri.set(req.getURI());
-                                                                      return ResponseEntity.ok(res.bodyTo(byte[].class));
-                                                                  }
-                                                          );
+                .uri(url)
+                .exchange(
+                        (req, res) -> {
+                            finalUri.set(req.getURI());
+                            return ResponseEntity.ok(res.bodyTo(byte[].class));
+                        }
+                );
 
         if (response == null || response.getStatusCode().isError()) {
             throw new ContentParseException();
@@ -83,5 +81,6 @@ public class LumexContentHlsParser implements ContentPlaylistParserService {
     }
 
 
-    private record FetchedData(byte[] data, String fetchedUrl) {}
+    private record FetchedData(byte[] data, String fetchedUrl) {
+    }
 }

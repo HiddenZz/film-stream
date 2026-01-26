@@ -1,9 +1,8 @@
 package org.film.parser.feature.parser.playlist.service.veveo;
 
 import lombok.extern.slf4j.Slf4j;
-import org.film.parser.feature.configuration.properties.external.VeveoConfig;
+import org.film.parser.core.configuration.properties.external.VeveoConfig;
 import org.film.parser.feature.parser.playlist.data.ParsedContentPlaylistMedia;
-import org.film.parser.feature.parser.playlist.data.ParsedMasterMedia;
 import org.film.parser.feature.parser.playlist.data.exceptions.ContentParseException;
 import org.film.parser.feature.parser.playlist.service.ContentPlaylistParserService;
 import org.springframework.stereotype.Service;
@@ -31,10 +30,10 @@ public class VeveoContentHlsParser implements ContentPlaylistParserService {
 
         try {
             final byte[] playlistData = restClient.get()
-                                                  .uri(baseUrl)
-                                                  .retrieve()
-                                                  .toEntity(byte[].class)
-                                                  .getBody();
+                    .uri(baseUrl)
+                    .retrieve()
+                    .toEntity(byte[].class)
+                    .getBody();
 
             return ParsedContentPlaylistMedia.builder().contentPlaylist(playlistData).name(getName()).build();
 
@@ -43,7 +42,7 @@ public class VeveoContentHlsParser implements ContentPlaylistParserService {
             throw new ContentParseException();
         }
 
-        
+
     }
 
     @Override
@@ -54,8 +53,8 @@ public class VeveoContentHlsParser implements ContentPlaylistParserService {
 
     URI uriBuilder(String parsedMasterHlsUrl, String contentPlaylistUrl) {
         return UriComponentsBuilder.fromUriString(parsedMasterHlsUrl)
-                                   .replacePath(contentPlaylistUrl)
-                                   .build()
-                                   .toUri();
+                .replacePath(contentPlaylistUrl)
+                .build()
+                .toUri();
     }
 }

@@ -4,7 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a Spring Boot application for parsing and streaming video content. The application fetches HLS playlists from external video streaming providers (like Lumex), processes them, and stores content in MinIO object storage. It acts as a middleware service that handles video content parsing and transformation.
+Spring Boot application for video content management:
+- Parses HLS playlists from video providers (Lumex, Veoveo)
+- Searches torrent content via Jackett API
+- Stores processed playlists in MinIO object storage
+- Integrates with TMDB for movie metadata
 
 ## Build & Run Commands
 
@@ -44,16 +48,65 @@ The application follows a multi-layered parsing pipeline:
 
 ### Parser Strategy Pattern
 
-The application uses a resolver pattern for handling different video providers:
-
-- `MasterPlaylistParserService` interface defines the contract for all parsers
-- Each provider implementation (e.g., Lumex) registers itself with a unique name via `getName()`
-- `MasterPlaylistParserResolver` maintains a map of parser name → implementation
-- At runtime, the resolver selects the correct parser based on the `AvailablePlayer.name()`
+Resolver pattern for video provider handling:
+- `MasterPlaylistParserService` - Contract for all parsers
+- Each provider (Lumex, Veoveo) registers via `getName()`
+- `MasterPlaylistParserResolver` maps parser name → implementation
+- Runtime parser selection based on `AvailablePlayer.name()`
 
 **Key Files:**
-- `MasterPlaylistParserResolver.java:17` - Parser resolution logic
-- `PlaylistParserServiceImpl.java:32-36` - Parser selection flow
+- `MasterPlaylistParserResolver.java:17` - Resolution logic
+- `PlaylistParserServiceImpl.java:32-36` - Parser selection
+
+### Torrent Feature
+
+Jackett integration for torrent search:
+
+**Flow:**
+1. `TorrentController.searchSeed()` - Receives TMDB movie ID
+2. `TorrentServiceImpl.searchSeeds()` - Orchestrates search
+3. `TorrentQueryBuilder` - Builds query: `"{title} {year} год"`
+4. `JackettClient.search()` - Calls Jackett API at `/indexers/all/results/`
+5. `JackettResultToSeedMapper` - Maps results to `Seed` objects
+
+**Configuration (`TorrentConfiguration.java`):**
+- Custom `ObjectMapper` with `UPPER_CAMEL_CASE` naming strategy for Jackett API
+- `FAIL_ON_UNKNOWN_PROPERTIES = false` to ignore extra JSON fields (like `Indexers`)
+- Dedicated `RestClient` bean for Jackett communication
+
+**Data Models:**
+- `JackettResults` - Root response containing `List<JackettResult>`
+- `JackettResult` - Individual torrent (tracker, title, guid, link, seeders, peers, size, gain)
+- `Seed` - Simplified model (guid, title, externalLink)
+- `TMBDMovieInfo` - Movie metadata (title, year)
+
+**Endpoints:**
+- `GET /seeds/?movieId={tmdbId}` - Search torrents by TMDB ID
+
+**Important:** All Jackett data models require `@NoArgsConstructor` for Jackson deserialization.
+
+### Redis Cache & Streams
+
+Redis integration via Spring Data Redis for torrent caching:
+
+**Flow:**
+1. `RedisSeedsService.sendTorrents()` - Caches torrent results and publishes to stream
+2. Uses pipelined execution for batch operations
+3. Generates SHA256 hash as cache GUID from Jackett GUID
+4. Stores JSON serialized `JackettResult` with TTL (configurable via `torrentCachePerSeconds`)
+5. Publishes to Redis Stream `download:stream` with `download-payload` field
+
+**Configuration (`RedisConfiguration.java`):**
+- `LettuceConnectionFactory` for connection management
+- `StringRedisTemplate` for string operations
+- Connection to `storage.redis.url:port`
+
+**Operations:**
+- `SET seed:{guid} {json} EX {ttl}` - Cache torrent with expiration
+- `XADD download:stream * download-payload {json}` - Publish to stream
+- `GET seed:{guid}` - Retrieve cached torrent
+
+**Key Pattern:** `seed:{sha256(jackettGuid)}`
 
 ### Provider Implementation: Lumex
 
@@ -69,64 +122,76 @@ The Lumex parser implements a complex multi-step extraction process:
 
 ### RestClient Configuration
 
-Three separate RestClient beans are configured:
+Multiple RestClient beans in `RestClientConfiguration.java`:
 
-- `restClient` - Default client for the main parsing host API
-- `lumexRestClient` - Lumex-specific with cookie handling and custom headers
-- `proxyRestClient` - Configured with SSL trust-all and HTTP proxy (127.0.0.1:8080) for debugging
+- `restClient` - Default client for parsing host API
+- `lumexRestClient` - Lumex-specific (cookie handling, custom headers)
+- `proxyRestClient` - Debug client (SSL trust-all, HTTP proxy 127.0.0.1:8080)
+- Jackett client configured in `TorrentConfiguration.java` with custom Jackson settings
 
-**Location:** `RestTemplateConfiguration.java`
-
-### Error Handling Strategy
-
-The codebase uses custom exceptions for different failure scenarios:
+### Custom Exceptions
 
 - `ParseIframeException` - Iframe URL parsing failures
-- `ParseMasterPlaylistException` - General master playlist parsing errors
+- `ParseMasterPlaylistException` - Master playlist parsing errors
 - `PlaylistDownloadException` - Playlist download failures
 - `ContentExtractException` / `ContentRemoteExtractException` - Content extraction errors
 - `ContentParseException` - Content parsing errors
-
-These exceptions are thrown at specific layers and caught/wrapped at higher levels.
+- `JackettException` - Jackett API failures
 
 ### Data Models
 
-- `AvailablePlayer` - Represents a video player option from external API
-- `MasterMedia` - Contains parsed master playlist data (name, bytes, URL)
-- `ContentPlaylistMedia` - Represents individual media content in playlists
-- `LumexResponse` / `LumexContentPlayer` - Lumex API response structures
+**Playlist Domain:**
+- `AvailablePlayer` - Video player option from external API
+- `MasterMedia` - Parsed master playlist (name, bytes, URL)
+- `ContentPlaylistMedia` - Individual media content in playlists
+- `LumexResponse` / `LumexContentPlayer` - Lumex API responses
+
+**Torrent Domain:**
+- `JackettResults` - Root Jackett response
+- `JackettResult` - Single torrent result
+- `Seed` - Simplified torrent representation
+- `TMBDMovieInfo` - Movie metadata from TMDB
 
 ## Configuration
 
 ### Application Properties
 
-Configuration is loaded from `application.yml`:
+Configuration in `application.yml`:
 
-- **Server:** Runs on port 8084
-- **Database:** PostgreSQL at localhost:5432 (database: movie, user: movie_user)
-- **MinIO:** Endpoint at http://127.0.0.1:9000/ (bucket: film)
+- **Server:** Port 8084
+- **Database:** PostgreSQL localhost:5432, db=movie, schema=film_stream, user=movie_user
+- **Redis:** localhost:6379 (`storage.redis`)
+- **MinIO:** http://127.0.0.1:9000/, bucket=content, user=minioadmin
+- **Jackett:** http://localhost:9117/api/v2.0/ (apiKey in config)
 - **External APIs:**
-  - Parse host: https://api4.rhhhhhhh.live/
-  - Lumex host: https://api.lumex.space
+  - Parse host: https://api4.rhserv.vu/
+  - Lumex: https://api.lumex.space
+- **Flyway:** Enabled, schema=film_stream
+- **MyBatis:** Mappers in classpath:mapper/*.xml, underscore-to-camelCase mapping
 
 ### Configuration Classes
 
-Spring `@ConfigurationProperties` pattern is used:
+Spring `@ConfigurationProperties` classes:
 
-- `MinioProperties` - MinIO credentials and bucket configuration
-- `RestTemplateConfigurationProperties` - External API endpoints
-- `LumexConfig` - Lumex-specific configuration (name and host)
+- `MinioProperties` - MinIO credentials/bucket (`storage.minio`)
+- `RedisProperties` - Redis connection and TTL config (`storage.redis`)
+- `RestTemplateConfigurationProperties` - API endpoints (`network.rest-template`)
+- `LumexConfig` - Lumex provider config (`parsers.movie.lumex`)
+- `JackettProperties` - Jackett API config (`torrent.jackett`)
 
-All properties classes are scanned via `@ConfigurationPropertiesScan` in `Main.java:11`
+Properties scanned via `@ConfigurationPropertiesScan` in Main.java:11
 
 ## Technology Stack
 
-- **Spring Boot 4.0.0-M3** (Milestone release)
-- **PostgreSQL** with MyBatis for persistence
+- **Spring Boot 3.5.0**
+- **PostgreSQL** + MyBatis for persistence
+- **Redis** via Spring Data Redis (Lettuce) for caching and streams
 - **MinIO** for object storage
-- **Flyway** for database migrations (currently disabled)
+- **Flyway** for database migrations
+- **Jackett API** for torrent search
+- **TMDB API** for movie metadata
 - **RxJava 3** for reactive operations
-- **M3U8 Parser** (io.lindstrom) for HLS playlist parsing
+- **M3U8 Parser** (io.lindstrom) for HLS parsing
 - **MapStruct** for object mapping
 - **Lombok** for boilerplate reduction
 - **Testcontainers** for integration tests
@@ -142,22 +207,34 @@ Run tests with embedded PostgreSQL via Testcontainers - no manual database setup
 
 ## Important Implementation Notes
 
-### Current State
+### Jackson Deserialization
 
-Several service methods return `null` or empty implementations, indicating the application is in active development:
+**Critical for Jackett integration:**
+- All Jackett DTOs require `@NoArgsConstructor` for Jackson
+- Use explicit `@JsonProperty` annotations for JSON field mapping
+- `FAIL_ON_UNKNOWN_PROPERTIES = false` to ignore extra fields
 
-- `PlaylistServiceIml.getPlaylist()` returns null
-- `PlaylistParserServiceImpl.parseMasterPlaylist()` returns empty string
-- `MinioClientImpl.fileExists()` returns false
+### RestClient Selection
 
-### RestClient Usage
+Use appropriate RestClient for each API:
+- `restClient` - Main parsing API
+- `lumexRestClient` - Lumex (requires specific headers/cookies)
+- `proxyRestClient` - Debugging with proxy
+- Jackett client - Configured in TorrentConfiguration with custom Jackson
 
-The codebase has migrated from `RestTemplate` to Spring's `RestClient` API. When making HTTP calls, use the appropriate client bean based on the target:
+### Redis Operations
 
-- Use `restClient` for the main parsing API
-- Use `lumexRestClient` for Lumex API calls (maintains cookies and proper headers)
-- Use `proxyRestClient` for debugging with proxy
+Use `StringRedisTemplate` for Redis operations:
+- `opsForValue().set(key, value, Duration)` - SET with TTL
+- `opsForValue().get(key)` - GET operation
+- `opsForStream().add(record)` - XADD to streams
+- `executePipelined(callback)` - Batch operations
 
 ### Retry Logic
 
-HTTP requests to Lumex use retry logic (`requestWithRetry` in `LumexMasterPlaylistParserService.java:112`). This method retries up to N times on failure or error status codes.
+Lumex requests use `requestWithRetry()` (LumexMasterPlaylistParserService.java:112) - retries N times on failure.
+
+### TODOs
+
+- `TorrentServiceImpl.searchSeeds()` - Hardcoded movie info, needs TMDB integration via TMDBClient
+- `TorrentController` - `sendToDownload()` and `getDownloadProgress()` not implemented

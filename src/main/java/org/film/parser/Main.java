@@ -9,8 +9,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Configuration;
 
 @SpringBootApplication
-@ConfigurationPropertiesScan(basePackages = "org.film.parser.feature.configuration")
-@MapperScan("org.film.parser.feature.playlist.repository.mapper")
+@ConfigurationPropertiesScan(basePackages = "org.film.parser.core.configuration")
 public class Main {
     public static void main(String[] args) {
 
