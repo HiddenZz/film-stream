@@ -1,4 +1,18 @@
 services:
+  jackett:
+    image: lscr.io/linuxserver/jackett:latest
+    container_name: jackett
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Moscow
+    volumes:
+      - ./jackett/config:/config
+      - ./downloads:/downloads
+    ports:
+      - "9117:9117"
+    restart: unless-stopped
+
   miniosolo:
     image: minio/minio:latest
     container_name: miniosolo
@@ -30,10 +44,47 @@ services:
     networks:
       - postgres_network
 
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    environment:
+      - REDIS_REPLICATION_MODE=master
+    networks:
+      - app-network
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  redis-init:
+    image: redis:7-alpine
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - app-network
+    entrypoint: >
+      sh -c "
+        redis-cli -h redis XGROUP CREATE download:stream downloader-torrent 0 MKSTREAM || true &&
+        redis-cli -h redis XGROUP CREATE formatting:stream main-formatter-group 0 MKSTREAM || true &&
+        echo 'Redis initialized'
+      "
+    restart: "no"
+
 
 networks:
   postgres_network:
+  app-network:
+    driver: bridge
 
 volumes:
   minio_dev_data:
   postgres_data:
+  redis_data:
+    driver: local

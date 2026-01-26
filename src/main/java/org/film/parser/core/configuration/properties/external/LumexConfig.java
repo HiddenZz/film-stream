@@ -1,4 +1,4 @@
-package org.film.parser.feature.configuration.properties.external;
+package org.film.parser.core.configuration.properties.external;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.ConfigurationPropertiesBinding;

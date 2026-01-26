@@ -5,7 +5,7 @@ import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
 import io.minio.StatObjectArgs;
 import lombok.extern.slf4j.Slf4j;
-import org.film.parser.feature.configuration.properties.MinioProperties;
+import org.film.parser.core.configuration.properties.MinioProperties;
 import org.film.parser.feature.playlist.data.exceptions.NoSuchFileException;
 import org.film.parser.feature.playlist.data.exceptions.SaveFileException;
 import org.springframework.stereotype.Component;
@@ -30,15 +30,15 @@ public class MasterPlaylistFileStorageClientImpl implements MasterPlaylistFileSt
         try {
             minioClient.statObject(
                     StatObjectArgs.builder()
-                                  .bucket(minioProperties.topPrefix())
-                                  .object(objectName)
-                                  .build()
+                            .bucket(minioProperties.topPrefix())
+                            .object(objectName)
+                            .build()
             );
 
             return true;
         } catch (Exception e) {
             log.warn("Error checking if file exists in Minio. Bucket: {}, Object: {}. Error: {}",
-                    minioProperties.topPrefix(), objectName, e.getMessage());
+                     minioProperties.topPrefix(), objectName, e.getMessage());
             return false;
         }
     }
@@ -49,13 +49,13 @@ public class MasterPlaylistFileStorageClientImpl implements MasterPlaylistFileSt
         try {
             return minioClient.getObject(
                     GetObjectArgs.builder()
-                                 .bucket(minioProperties.topPrefix())
-                                 .object(objectName)
-                                 .build()
+                            .bucket(minioProperties.topPrefix())
+                            .object(objectName)
+                            .build()
             );
         } catch (Exception e) {
             log.error("Error retrieving file from Minio. Bucket: {}, Object: {}. Error: {}",
-                    minioProperties.topPrefix(), objectName, e.getMessage());
+                      minioProperties.topPrefix(), objectName, e.getMessage());
             throw new NoSuchFileException("No master playlist file in bucket", name, e);
         }
 
@@ -74,15 +74,15 @@ public class MasterPlaylistFileStorageClientImpl implements MasterPlaylistFileSt
 
             minioClient.putObject(
                     PutObjectArgs.builder()
-                                 .bucket(minioProperties.topPrefix())
-                                 .object(objectName)
-                                 .stream(inputStream, -1, 10485760)
-                                 .contentType("application/vnd.apple.mpegurl")
-                                 .build()
+                            .bucket(minioProperties.topPrefix())
+                            .object(objectName)
+                            .stream(inputStream, -1, 10485760)
+                            .contentType("application/vnd.apple.mpegurl")
+                            .build()
             );
         } catch (Exception e) {
             log.error("Error saving file to Minio. Bucket: {}, Object: {}. Error: {}",
-                    minioProperties.topPrefix(), objectName, e.getMessage());
+                      minioProperties.topPrefix(), objectName, e.getMessage());
             throw new SaveFileException("Failed to save master playlist file", name, e);
         }
     }
