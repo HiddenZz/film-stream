@@ -1,7 +1,5 @@
 package org.film.parser.core.configuration;
 
-import org.film.parser.core.configuration.properties.RestClientProperties;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
@@ -17,12 +15,12 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.X509Certificate;
 import java.time.Duration;
 
-@EnableConfigurationProperties({RestClientProperties.class})
+
 @Configuration
 public class RestClientConfiguration {
 
     @Bean
-    RestClient restClient(RestClientProperties props) {
+    RestClient restClient() {
         HttpClient jdkHttpClient = HttpClient.newBuilder()
                 .followRedirects(HttpClient.Redirect.NORMAL)
                 .connectTimeout(Duration.ofSeconds(5))
@@ -30,32 +28,8 @@ public class RestClientConfiguration {
 
         return RestClient.builder()
                 .requestFactory(new JdkClientHttpRequestFactory(jdkHttpClient))
-                .baseUrl(props.getParseHost())
+
                 .build();
-    }
-
-    @Bean
-    RestClient lumexRestClient() {
-        HttpClient jdkHttpClient = HttpClient.newBuilder()
-                .followRedirects(HttpClient.Redirect.NORMAL)
-                .connectTimeout(Duration.ofSeconds(15))
-                .cookieHandler(new CookieManager())
-                .build();
-
-        return RestClient.builder()
-                .requestFactory(new JdkClientHttpRequestFactory(jdkHttpClient))
-                .defaultHeaders((headers) -> {
-                    headers.add("Origin", "https://p.lumex.space");
-                    headers.add("Referer", "https://p.lumex.space/");
-                    headers.add("Sec-Fetch-Dest", "empty");
-                    headers.add("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36");
-                }).build();
-    }
-
-
-    @Bean
-    RestClient veveoRestClient() {
-        return RestClient.builder().build();
     }
 
 

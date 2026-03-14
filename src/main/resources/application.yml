@@ -1,20 +1,3 @@
-network:
-  rest-template:
-    parse-host: "https://api4.rhserv.vu/"
-
-parsers:
-  movie:
-    lumex:
-      name: "videocdn"
-      host: "https://api.lumex.space"
-    veveo:
-      api-token-header-name: "dle-api-token"
-      content-map-url: "https://api.rstprgapipt.com/dle-plugin/balancer-api/proxy/playlists/catalog-api/episodes"
-      query-param-for-request-content: "content-id"
-      query-param-movie-id-for-parse-name: "movie_id"
-      name: "veoveo50-cdn"
-
-
 storage:
   minio:
     credentials:
@@ -26,11 +9,8 @@ storage:
       hls-name: "index.m3u8"
   redis:
     torrent-cache-per-seconds: 4000
-    download-stream: stream:download,
+    download-stream: download:stream
     stream-message-head-key: data
-
-
-
 
 
 torrent:
@@ -63,12 +43,6 @@ spring:
 # MyBatis Configuration
 mybatis:
   mapper-locations: classpath:mapper/*.xml
-  type-aliases-package: org.film.parser.feature.playlist.data
-  configuration:
-    map-underscore-to-camel-case: true
-    default-enum-type-handler: org.apache.ibatis.type.EnumTypeHandler
-    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
-  type-handlers-package: org.film.parser.feature.playlist.data.typehandler
 
 logging:
   level:

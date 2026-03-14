@@ -1,6 +1,6 @@
 package org.film.parser.core.mapper;
 
-import org.mapstruct.Mapper;
+
 import org.mapstruct.MapperConfig;
 import org.mapstruct.MappingConstants;
 import org.mapstruct.ReportingPolicy;

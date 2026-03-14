@@ -1,4 +1,4 @@
-package org.film.parser.feature.playlist.cache;
+package org.film.parser.core.util;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -37,7 +37,7 @@ public class EphemeralCache<Key, Value> {
                 CacheEntry<Value> entry = new CacheEntry<>(value, saveFuture);
 
                 log.info("[{}] Value computed and cached for key: {}. Save status: {}",
-                        cacheName, key, entry.isSaving() ? "IN_PROGRESS" : "COMPLETED");
+                         cacheName, key, entry.isSaving() ? "IN_PROGRESS" : "COMPLETED");
 
                 return entry;
             }).whenCompleteAsync((result, ex) -> {
@@ -60,7 +60,7 @@ public class EphemeralCache<Key, Value> {
                 log.info("[{}] Successfully saved value for key: {}", cacheName, key);
             } catch (Exception e) {
                 log.error("[{}] Failed to save value for key: {}. Error: {}",
-                        cacheName, key, e.getMessage(), e);
+                          cacheName, key, e.getMessage(), e);
                 throw new RuntimeException("Save failed for key: " + key, e);
             }
         }, saveExecutor);

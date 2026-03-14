@@ -13,6 +13,8 @@ import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -77,4 +79,5 @@ public class RedisSeedsService implements LocalCacheSeedsService {
     String idBuilder(JackettResult seed) {
         return DigestUtils.sha256Hex(seed.getGuid());
     }
+
 }

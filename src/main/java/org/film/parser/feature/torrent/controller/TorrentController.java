@@ -34,6 +34,7 @@ public class TorrentController {
         if (result == null) {
             return ResponseEntity.notFound().build();
         }
+
         return ResponseEntity.ok(result);
     }
 
