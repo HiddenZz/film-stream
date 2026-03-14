@@ -1,17 +1,16 @@
 package org.film.parser.feature.torrent.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.logging.log4j.util.InternalException;
 import org.film.parser.core.configuration.properties.RedisProperties;
+import org.film.parser.feature.tmdb.client.TMDBClient;
+import org.film.parser.feature.tmdb.data.TMDBMovieDetails;
 import org.film.parser.feature.torrent.client.JackettClient;
 import org.film.parser.feature.torrent.data.JackettResult;
 import org.film.parser.feature.torrent.data.Seed;
 import org.film.parser.feature.torrent.data.TMBDMovieInfo;
 import org.film.parser.feature.torrent.data.mappers.JackettResultToSeedMapper;
-import org.springframework.cglib.core.Local;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -23,6 +22,7 @@ import java.util.Map;
 @AllArgsConstructor
 public class TorrentServiceImpl implements TorrentService {
 
+    private final TMDBClient tmdbClient;
     private final JackettClient jackettClient;
     private final TorrentQueryBuilder torrentQueryBuilder;
     private final LocalCacheSeedsService redisSeedsService;
@@ -32,8 +32,11 @@ public class TorrentServiceImpl implements TorrentService {
 
     @Override
     public List<Seed> searchSeeds(long tmdbId) {
-        //TODO: test data for download torrent. replace it with request to tmdb(:tmdbId)
-        final TMBDMovieInfo movieInfo = TMBDMovieInfo.builder().year("2025").title("Чебурашка. Секрет праздника")
+        final TMDBMovieDetails movie = tmdbClient.movieDetails(tmdbId, "ru-RU");
+        final String year = movie.getReleaseDate() != null ? movie.getReleaseDate().substring(0, 4) : "";
+        final TMBDMovieInfo movieInfo = TMBDMovieInfo.builder()
+                .title(movie.getTitle())
+                .year(year)
                 .build();
         final List<JackettResult> jackettResults = jackettClient.search(torrentQueryBuilder.movieSearch(movieInfo));
 

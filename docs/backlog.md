@@ -2,15 +2,13 @@
 
 ## Must Do
 
-- **TMDB integration** — `TorrentServiceImpl.searchSeeds()` has hardcoded movie info. Implement `TMDBClient` to fetch movie metadata (title, year) by TMDB ID. Approach: create a REST client for TMDB API, add proxy endpoint for client apps.
-
 - **Download endpoints** — `TorrentController.sendToDownload()` and `getDownloadProgress()` are stubs. Implement: send selected torrent to Redis Stream, expose SSE or polling endpoint for download progress from film-downloader.
 
 - **Remove legacy provider parsers** — Lumex, Veoveo and all HLS playlist parsing code are no longer needed. Delete: parser services, resolver, related RestClient beans (`lumexRestClient`), playlist controller, content extractor. Clean up unused dependencies.
 
 ## Nice to Have
 
-(empty)
+- **Cache TMDB movie details** — Cache responses from `GET /tmdb/movie/{id}` in Redis with TTL to reduce TMDB API calls. Approach: similar to `RedisSeedsService` — key pattern `tmdb:movie:{id}`, JSON value, configurable TTL.
 
 ## Ideas to Explore
 
