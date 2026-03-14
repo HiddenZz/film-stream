@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.film.parser.core.configuration.properties.RedisProperties;
+import org.film.parser.core.exception.ResourceNotFoundException;
 import org.film.parser.feature.torrent.data.JackettResult;
 import org.film.parser.feature.torrent.data.Seed;
 import org.springframework.data.redis.connection.StringRedisConnection;
@@ -13,8 +14,6 @@ import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -60,15 +59,15 @@ public class RedisSeedsService implements LocalCacheSeedsService {
 
     @Override
     public JackettResult getTorrent(String guid) {
-        try {
-            final String json = redisTemplate.opsForValue().get(keyBuilder(guid));
-            if (json == null || json.isEmpty()) {
-                throw new RuntimeException("Line not found ");
-            }
+        final String json = redisTemplate.opsForValue().get(keyBuilder(guid));
+        if (json == null || json.isEmpty()) {
+            throw new ResourceNotFoundException("Torrent not found in cache (expired or invalid GUID): %s".formatted(guid));
+        }
 
+        try {
             return objectMapper.readValue(json, JackettResult.class);
-        } catch (Exception e) {
-            throw new RuntimeException("Miss cache for GUID: %s".formatted(guid), e);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Failed to deserialize cached torrent for GUID: %s".formatted(guid), e);
         }
     }
 

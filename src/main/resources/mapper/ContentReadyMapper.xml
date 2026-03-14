@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.film.parser.feature.movie.repository.ContentReadyRepository">
+
+    <resultMap id="contentReadyMap" type="org.film.parser.feature.movie.data.ContentReady">
+        <id property="id" column="id"/>
+        <result property="tmdbId" column="tmdb_id"/>
+        <result property="contentUuid" column="content_uuid"/>
+        <result property="minioPath" column="minio_path"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="org.film.parser.feature.movie.data.ContentReady">
+        INSERT INTO content_ready (tmdb_id, content_uuid, minio_path)
+        VALUES (#{tmdbId}, #{contentUuid}, #{minioPath})
+        ON CONFLICT (tmdb_id) DO UPDATE
+            SET content_uuid = EXCLUDED.content_uuid,
+                minio_path   = EXCLUDED.minio_path
+    </insert>
+
+    <select id="findByTmdbId" parameterType="long" resultMap="contentReadyMap">
+        SELECT id, tmdb_id, content_uuid, minio_path
+        FROM content_ready
+        WHERE tmdb_id = #{tmdbId}
+    </select>
+
+</mapper>

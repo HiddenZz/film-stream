@@ -10,6 +10,7 @@ storage:
   redis:
     torrent-cache-per-seconds: 4000
     download-stream: download:stream
+    result-stream: result:stream
     stream-message-head-key: data
 
 

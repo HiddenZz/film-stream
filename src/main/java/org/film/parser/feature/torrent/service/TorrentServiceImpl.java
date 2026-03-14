@@ -61,7 +61,7 @@ public class TorrentServiceImpl implements TorrentService {
 
             return torrentInfo.getCacheGuid();
         } catch (Exception e) {
-            throw new RuntimeException("Exception during content send to download queue");
+            throw new RuntimeException("Failed to send torrent to download queue for GUID: %s".formatted(guid), e);
         }
 
     }
