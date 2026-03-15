@@ -14,15 +14,14 @@
     <insert id="insert" parameterType="org.film.parser.feature.movie.data.ContentReady">
         INSERT INTO content_ready (tmdb_id, content_uuid, minio_path)
         VALUES (#{tmdbId}, #{contentUuid}, #{minioPath})
-        ON CONFLICT (tmdb_id) DO UPDATE
-            SET content_uuid = EXCLUDED.content_uuid,
-                minio_path   = EXCLUDED.minio_path
+        ON CONFLICT (content_uuid) DO NOTHING
     </insert>
 
     <select id="findByTmdbId" parameterType="long" resultMap="contentReadyMap">
         SELECT id, tmdb_id, content_uuid, minio_path
         FROM content_ready
         WHERE tmdb_id = #{tmdbId}
+        ORDER BY created_at DESC
     </select>
 
 </mapper>

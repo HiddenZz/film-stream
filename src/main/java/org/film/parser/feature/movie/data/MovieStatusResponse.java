@@ -1,9 +1,11 @@
 package org.film.parser.feature.movie.data;
 
-public record MovieStatusResponse(MovieStatus status, String minioPath) {
+import java.util.List;
 
-    public static MovieStatusResponse ready(String minioPath) {
-        return new MovieStatusResponse(MovieStatus.READY, minioPath);
+public record MovieStatusResponse(MovieStatus status, List<ContentVersion> versions) {
+
+    public static MovieStatusResponse ready(List<ContentVersion> versions) {
+        return new MovieStatusResponse(MovieStatus.READY, versions);
     }
 
     public static MovieStatusResponse processing() {

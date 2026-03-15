@@ -4,10 +4,13 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.film.parser.feature.movie.data.ContentReady;
 import org.film.parser.feature.movie.data.ContentReadyEvent;
+import org.film.parser.feature.movie.data.ContentVersion;
 import org.film.parser.feature.movie.data.MovieStatusResponse;
 import org.film.parser.feature.movie.repository.ContentReadyRepository;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 @Slf4j
@@ -24,18 +27,20 @@ public class MovieServiceImpl implements MovieService {
         entity.setContentUuid(event.getContentUuid());
         entity.setMinioPath(event.getMinioPath());
         repository.insert(entity);
-        log.info("Movie ready saved: tmdbId={}, path={}", event.getTmdbId(), event.getMinioPath());
+        log.info("Movie ready saved: tmdbId={}, contentUuid={}", event.getTmdbId(), event.getContentUuid());
     }
 
     @Override
     public MovieStatusResponse getStatus(long tmdbId) {
-        final ContentReady ready = repository.findByTmdbId(tmdbId);
-        if (ready != null) {
-            return MovieStatusResponse.ready(ready.getMinioPath());
+        final List<ContentReady> versions = repository.findByTmdbId(tmdbId);
+        if (!versions.isEmpty()) {
+            final List<ContentVersion> contentVersions = versions.stream()
+                    .map(v -> new ContentVersion(v.getContentUuid(), v.getMinioPath()))
+                    .toList();
+            return MovieStatusResponse.ready(contentVersions);
         }
 
-        final boolean isProcessing = isProcessing(tmdbId);
-        return isProcessing ? MovieStatusResponse.processing() : MovieStatusResponse.notFound();
+        return isProcessing(tmdbId) ? MovieStatusResponse.processing() : MovieStatusResponse.notFound();
     }
 
     private boolean isProcessing(long tmdbId) {
