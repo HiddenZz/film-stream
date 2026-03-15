@@ -19,6 +19,7 @@ Detailed docs live in `docs/`. Read relevant files before working on a feature.
 - `docs/torrent.md` — Jackett integration, Redis cache/streams, download pipeline
 - `docs/configuration.md` — properties, RestClient beans, external connections
 - `docs/backlog.md` — tasks: must-do, nice-to-have, ideas to explore
+- `docs/conventions.md` — coding conventions: immutability, object layers, mapping
 
 ## Conventions
 

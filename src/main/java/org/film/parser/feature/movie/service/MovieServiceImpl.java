@@ -22,12 +22,13 @@ public class MovieServiceImpl implements MovieService {
 
     @Override
     public void saveReady(ContentReadyEvent event) {
-        final ContentReady entity = new ContentReady();
-        entity.setTmdbId(event.getTmdbId());
-        entity.setContentUuid(event.getContentUuid());
-        entity.setMinioPath(event.getMinioPath());
+        final ContentReady entity = ContentReady.builder()
+                .tmdbId(event.tmdbId())
+                .contentUuid(event.contentUuid())
+                .minioPath(event.minioPath())
+                .build();
         repository.insert(entity);
-        log.info("Movie ready saved: tmdbId={}, contentUuid={}", event.getTmdbId(), event.getContentUuid());
+        log.info("Movie ready saved: tmdbId={}, contentUuid={}", event.tmdbId(), event.contentUuid());
     }
 
     @Override
