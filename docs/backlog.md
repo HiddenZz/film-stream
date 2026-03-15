@@ -8,13 +8,6 @@
   - `GET /download/progress/{tmdbId}/stream` — SSE: poll Redis on interval, push updates to client via `SseEmitter` until progress reaches 100 or connection drops.
   - Note: remove the dead `getDownloadProgress()` stub in `TorrentController` (missing `@GetMapping`).
 
-- ~~**Movie readiness: completed event consumer**~~ — When film-downloader finishes processing, it should publish a completion event to a Redis Stream (e.g. `result:stream`). film-stream must consume it and persist readiness to PostgreSQL.
-  - film-downloader side: publish to `result:stream`, field `data`, value `{tmdbId, contentUuid, minioPath}` on completion. `minioPath` format: `content/{tmdbId}/{contentUuid}/master.m3u8` (master playlist — contains all quality variants).
-  - film-stream side: Redis Stream consumer (similar to how film-downloader consumes `download:stream`). On receive — save to new table `content_ready(tmdb_id, content_uuid, minio_path, created_at)` via Flyway migration.
-  - API: `GET /movie/{tmdbId}/status` — check DB, return `{status: ready|processing|not_found}` + minioPath if ready.
-
-- **Remove legacy provider parsers** — Lumex, Veoveo and all HLS playlist parsing code are no longer needed. Delete: parser services, resolver, related RestClient beans (`lumexRestClient`), playlist controller, content extractor. Clean up unused dependencies.
-
 ## Nice to Have
 
 - **Cache TMDB movie details** — Cache responses from `GET /tmdb/movie/{id}` in Redis with TTL to reduce TMDB API calls. Approach: similar to `RedisSeedsService` — key pattern `tmdb:movie:{id}`, JSON value, configurable TTL.

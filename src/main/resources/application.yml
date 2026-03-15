@@ -6,7 +6,6 @@ storage:
       password: "minioadmin123"
     buckets:
       top-prefix: content
-      hls-name: "index.m3u8"
   redis:
     torrent-cache-per-seconds: 4000
     download-stream: download:stream
@@ -53,7 +52,6 @@ logging:
   level:
     org.apache.ibatis: DEBUG
     org.film.parser.feature.movie.detail.repository: TRACE
-    org.film.parser.feature.playlist.repository: DEBUG
     org.springframework.jdbc.core.JdbcTemplate: DEBUG
     org.springframework.jdbc.core.StatementCreatorUtils: TRACE
     org.springframework.web.client.RestTemplate: DEBUG

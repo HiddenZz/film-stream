@@ -4,5 +4,5 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 
 @ConfigurationProperties("storage.minio.buckets")
-public record MinioProperties(String topPrefix, String hlsName) {
+public record MinioProperties(String topPrefix) {
 }
