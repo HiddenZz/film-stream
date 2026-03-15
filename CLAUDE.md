@@ -27,7 +27,7 @@ Detailed docs live in `docs/`. Read relevant files before working on a feature.
 
 **Commits:** Conventional commits (`feat`, `fix`, `refactor`, `docs`, `chore`).
 
-**Backlog:** When the user shares an idea or task, add it to `docs/backlog.md` in a structured form with a brief note on possible implementation approach.
+**Backlog:** When the user shares an idea or task, add it to `docs/backlog.md` in a structured form with a brief note on possible implementation approach. After completing a task from the backlog — remove it entirely. If only part of the task was done — edit the entry to reflect what remains.
 
 ## Critical Rules
 
