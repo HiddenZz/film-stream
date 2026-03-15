@@ -11,4 +11,6 @@ public interface ContentReadyRepository {
     void insert(ContentReady contentReady);
 
     List<ContentReady> findByTmdbId(long tmdbId);
+
+    ContentReady findByContentUuid(String contentUuid);
 }

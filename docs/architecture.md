@@ -34,6 +34,10 @@ Client → film-stream → MinIO           (stream HLS content)
 - **Redis** — torrent cache (TTL-based) + message broker (Streams)
 - **MinIO** — HLS media files, bucket `content`
 
+## HLS Streaming
+
+film-stream proxies HLS content from MinIO. See `docs/streaming.md`.
+
 ## Persistence Layer
 
 - **MyBatis** with XML mappers (`resources/mapper/*.xml`)

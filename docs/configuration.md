@@ -13,7 +13,8 @@
 
 ## Configuration Properties Classes
 
-- `MinioProperties` — MinIO credentials/bucket (`storage.minio`)
+- `MinIoClientProperties` — MinIO credentials: endpoint, username, password (`storage.minio.credentials`)
+- `MinioProperties` — MinIO bucket config: `topPrefix` = bucket name (`storage.minio.buckets`)
 - `RedisProperties` — Redis connection and TTL config (`storage.redis`)
 - `JackettProperties` — Jackett API URL and key (`torrent.jackett`)
 - `TMDBProperties` — TMDB API base URL and Bearer token (`tmdb`)

@@ -24,4 +24,10 @@
         ORDER BY created_at DESC
     </select>
 
+    <select id="findByContentUuid" parameterType="string" resultMap="contentReadyMap">
+        SELECT id, tmdb_id, content_uuid, minio_path
+        FROM content_ready
+        WHERE content_uuid = #{contentUuid}
+    </select>
+
 </mapper>
