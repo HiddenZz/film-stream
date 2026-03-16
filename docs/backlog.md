@@ -9,8 +9,6 @@
   - Note: remove the dead `getDownloadProgress()` stub in `TorrentController` (missing `@GetMapping`).
 
 
-- **Extract Redis access from MovieServiceImpl** — `MovieServiceImpl` directly uses `StringRedisTemplate.hasKey()` to check progress keys. Extract into a dedicated repository (e.g. `ProgressRepository`) to encapsulate Redis key patterns and keep the service layer infrastructure-agnostic.
-
 ## Nice to Have
 
 - **Cache TMDB movie details** — Cache responses from `GET /tmdb/movie/{id}` in Redis with TTL to reduce TMDB API calls. Approach: similar to `RedisSeedsService` — key pattern `tmdb:movie:{id}`, JSON value, configurable TTL.

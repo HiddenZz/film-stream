@@ -14,10 +14,10 @@ import org.film.parser.feature.movie.data.MovieStatusResponse;
 import org.film.parser.feature.movie.data.MovieSummary;
 import org.film.parser.feature.movie.repository.ContentReadyRepository;
 import org.film.parser.feature.movie.repository.MovieRepository;
+import org.film.parser.feature.movie.repository.ProgressRepository;
 import org.film.parser.feature.stream.client.ContentStorageClient;
 import org.film.parser.feature.tmdb.client.TMDBClient;
 import org.film.parser.feature.tmdb.data.TMDBMovieDetails;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
@@ -34,7 +34,7 @@ public class MovieServiceImpl implements MovieService {
 
     private final ContentReadyRepository repository;
     private final MovieRepository movieRepository;
-    private final StringRedisTemplate redisTemplate;
+    private final ProgressRepository progressRepository;
     private final TMDBClient tmdbClient;
     private final ContentStorageClient contentStorageClient;
     private final RestClient restClient;
@@ -118,7 +118,7 @@ public class MovieServiceImpl implements MovieService {
             return MovieStatusResponse.ready(contentVersions);
         }
 
-        return isProcessing(tmdbId) ? MovieStatusResponse.processing() : MovieStatusResponse.notFound();
+        return progressRepository.isProcessing(tmdbId) ? MovieStatusResponse.processing() : MovieStatusResponse.notFound();
     }
 
     @Override
@@ -154,9 +154,4 @@ public class MovieServiceImpl implements MovieService {
                 .build();
     }
 
-    private boolean isProcessing(long tmdbId) {
-        final Boolean downloading = redisTemplate.hasKey("progress:DOWNLOADING:%d".formatted(tmdbId));
-        final Boolean formatting = redisTemplate.hasKey("progress:FORMATTING:%d".formatted(tmdbId));
-        return downloading || formatting;
-    }
 }
