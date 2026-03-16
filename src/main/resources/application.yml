@@ -16,6 +16,7 @@ storage:
 tmdb:
   base-url: https://api.themoviedb.org/3
   api-token: ${TMDB_API_TOKEN}
+  image-base-url: https://image.tmdb.org/t/p/w500
 
 torrent:
   jackett:

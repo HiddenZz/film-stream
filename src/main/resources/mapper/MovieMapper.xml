@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.film.parser.feature.movie.repository.MovieRepository">
+
+    <resultMap id="movieMap" type="org.film.parser.feature.movie.data.Movie">
+        <id property="id" column="id"/>
+        <result property="tmdbId" column="tmdb_id"/>
+        <result property="title" column="title"/>
+        <result property="originalTitle" column="original_title"/>
+        <result property="overview" column="overview"/>
+        <result property="posterPath" column="poster_path"/>
+        <result property="releaseDate" column="release_date"/>
+        <result property="voteAverage" column="vote_average"/>
+        <result property="runtime" column="runtime"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="org.film.parser.feature.movie.data.Movie">
+        INSERT INTO movies (tmdb_id, title, original_title, overview, poster_path, release_date, vote_average, runtime)
+        VALUES (#{tmdbId}, #{title}, #{originalTitle}, #{overview}, #{posterPath}, #{releaseDate}, #{voteAverage}, #{runtime})
+        ON CONFLICT (tmdb_id) DO NOTHING
+    </insert>
+
+    <select id="findByTmdbId" parameterType="long" resultMap="movieMap">
+        SELECT id, tmdb_id, title, original_title, overview, poster_path, release_date, vote_average, runtime
+        FROM movies
+        WHERE tmdb_id = #{tmdbId}
+    </select>
+
+    <select id="findAll" resultMap="movieMap">
+        SELECT id, tmdb_id, title, original_title, overview, poster_path, release_date, vote_average, runtime
+        FROM movies
+        ORDER BY created_at DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM movies
+    </select>
+
+</mapper>

@@ -2,6 +2,7 @@ package org.film.parser.feature.stream.client;
 
 import io.minio.GetObjectArgs;
 import io.minio.MinioClient;
+import io.minio.PutObjectArgs;
 import io.minio.errors.ErrorResponseException;
 import lombok.AllArgsConstructor;
 import org.film.parser.core.configuration.properties.MinioProperties;
@@ -33,6 +34,22 @@ public class MinioContentStorageClient implements ContentStorageClient {
             throw new RuntimeException("MinIO error", e);
         } catch (Exception e) {
             throw new RuntimeException("Failed to read from MinIO", e);
+        }
+    }
+
+    @Override
+    public void putObject(String objectKey, InputStream data, long size, String contentType) {
+        try {
+            minioClient.putObject(
+                    PutObjectArgs.builder()
+                            .bucket(minioProperties.topPrefix())
+                            .object(objectKey)
+                            .stream(data, size, -1)
+                            .contentType(contentType)
+                            .build()
+            );
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to write to MinIO: " + objectKey, e);
         }
     }
 }
