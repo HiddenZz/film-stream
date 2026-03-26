@@ -2,9 +2,8 @@ package org.film.parser.feature.movie.service;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.film.parser.core.configuration.properties.MinIoClientProperties;
-import org.film.parser.core.configuration.properties.MinioProperties;
 import org.film.parser.core.configuration.properties.TMDBProperties;
+import org.film.parser.core.exception.ResourceNotFoundException;
 import org.film.parser.feature.movie.data.ContentReady;
 import org.film.parser.feature.movie.data.ContentReadyEvent;
 import org.film.parser.feature.movie.data.ContentVersion;
@@ -22,7 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
 import java.io.ByteArrayInputStream;
-import java.net.URI;
+import java.io.InputStream;
 import java.util.List;
 
 @Service
@@ -38,8 +37,6 @@ public class MovieServiceImpl implements MovieService {
     private final TMDBClient tmdbClient;
     private final ContentStorageClient contentStorageClient;
     private final RestClient restClient;
-    private final MinIoClientProperties minIoClientProperties;
-    private final MinioProperties minioProperties;
     private final TMDBProperties tmdbProperties;
 
     @Override
@@ -136,13 +133,19 @@ public class MovieServiceImpl implements MovieService {
         return new MovieLibraryResponse(summaries, total, clampedOffset, clampedLimit);
     }
 
-    private MovieSummary toSummary(Movie movie) {
-        String posterUrl = null;
-        if (movie.getPosterPath() != null) {
-            posterUrl = URI.create(minIoClientProperties.getEndpoint())
-                    .resolve("/%s/%s".formatted(minioProperties.topPrefix(), movie.getPosterPath()))
-                    .toString();
+    @Override
+    public InputStream getPoster(long tmdbId) {
+        Movie movie = movieRepository.findByTmdbId(tmdbId);
+        if (movie == null || movie.getPosterPath() == null) {
+            throw new ResourceNotFoundException("Poster not found for tmdbId: " + tmdbId);
         }
+        return contentStorageClient.getObject(movie.getPosterPath());
+    }
+
+    private MovieSummary toSummary(Movie movie) {
+        String posterUrl = movie.getPosterPath() != null
+                ? "/movie/%d/poster".formatted(movie.getTmdbId())
+                : null;
         return MovieSummary.builder()
                 .tmdbId(movie.getTmdbId())
                 .title(movie.getTitle())
