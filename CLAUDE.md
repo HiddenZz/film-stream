@@ -35,6 +35,8 @@ Detailed docs live in `docs/`. Read relevant files before working on a feature.
 
 **After changing API or database schema**, update corresponding files in `docs/`.
 
+**After adding or editing a controller method**, verify that OpenAPI annotations (`@Tag`, `@Operation`) are present and up to date.
+
 ### Before Writing Code
 
 For trivial fixes (typos, one-line changes, simple renames) — skip discussion and just do it.

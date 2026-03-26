@@ -29,6 +29,7 @@ dependencies {
     implementation("io.minio:minio:8.5.17")
     implementation 'io.lindstrom:m3u8-parser:0.29'
     implementation 'com.fasterxml.jackson.core:jackson-databind'
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.6'
 
     runtimeOnly 'org.flywaydb:flyway-database-postgresql'
 

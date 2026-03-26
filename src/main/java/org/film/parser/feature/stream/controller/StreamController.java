@@ -1,5 +1,7 @@
 package org.film.parser.feature.stream.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
 import org.film.parser.feature.stream.service.StreamService;
 import org.springframework.http.CacheControl;
@@ -15,6 +17,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 
+@Tag(name = "Streaming", description = "HLS video streaming proxy")
 @RestController
 @RequestMapping("/stream")
 @AllArgsConstructor
@@ -25,6 +28,7 @@ public class StreamController {
 
     private final StreamService streamService;
 
+    @Operation(summary = "Get HLS master playlist")
     @GetMapping(value = "/{contentUuid}/master.m3u8", produces = M3U8_CONTENT_TYPE)
     public ResponseEntity<StreamingResponseBody> master(@PathVariable String contentUuid) {
         StreamingResponseBody body = out -> {
@@ -37,6 +41,7 @@ public class StreamController {
                 .body(body);
     }
 
+    @Operation(summary = "Get HLS quality-specific playlist")
     @GetMapping(value = "/{contentUuid}/{quality}/playlist.m3u8", produces = M3U8_CONTENT_TYPE)
     public ResponseEntity<StreamingResponseBody> playlist(
             @PathVariable String contentUuid,
@@ -52,6 +57,7 @@ public class StreamController {
                 .body(body);
     }
 
+    @Operation(summary = "Get HLS video segment")
     @GetMapping(value = "/{contentUuid}/{quality}/{segment}", produces = TS_CONTENT_TYPE)
     public ResponseEntity<StreamingResponseBody> segment(
             @PathVariable String contentUuid,
