@@ -7,7 +7,8 @@ storage:
     buckets:
       top-prefix: content
   redis:
-    torrent-cache-per-seconds: 4000
+    torrent-cache-per-seconds: 7200
+    negative-cache-seconds: 900
     download-stream: download:stream
     result-stream: result:stream
     stream-message-head-key: data

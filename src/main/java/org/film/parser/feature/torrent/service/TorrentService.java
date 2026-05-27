@@ -9,7 +9,7 @@ public interface TorrentService {
 
     List<Seed> searchSeeds(long tmdbId);
 
-    JackettResult getTorrent(String guid);
+    JackettResult getTorrent(long tmdbId, String guid);
 
-    String requestDownload(String guid);
+    String requestDownload(long tmdbId, String guid);
 }

@@ -24,29 +24,21 @@ public class TorrentController {
     @Operation(summary = "Search torrent seeds for a movie")
     @GetMapping("/seeds/")
     public ResponseEntity<List<Seed>> searchSeed(@RequestParam long movieId) {
-
         final List<Seed> seeds = torrentService.searchSeeds(movieId);
 
         return ResponseEntity.ok(seeds);
     }
 
-    @Operation(summary = "Get torrent details by GUID")
+    @Operation(summary = "Get torrent details by movie and GUID")
     @GetMapping("/torrent/")
-    public ResponseEntity<JackettResult> getTorrentInfo(@RequestParam String guid) {
-
-        final JackettResult result = torrentService.getTorrent(guid);
-
-        if (result == null) {
-            return ResponseEntity.notFound().build();
-        }
-
-        return ResponseEntity.ok(result);
+    public ResponseEntity<JackettResult> getTorrentInfo(@RequestParam long movieId, @RequestParam String guid) {
+        return ResponseEntity.ok(torrentService.getTorrent(movieId, guid));
     }
 
-    @Operation(summary = "Request torrent download by GUID")
+    @Operation(summary = "Request torrent download by movie and GUID")
     @PostMapping("/torrent/download/")
     public ResponseEntity<Object> sendToDownload(@RequestBody TorrentDownloadRequestDto requestDto) {
-        return ResponseEntity.ok(torrentService.requestDownload(requestDto.guid()));
+        return ResponseEntity.ok(torrentService.requestDownload(requestDto.tmdbId(), requestDto.guid()));
     }
 
     public ResponseEntity<Object> getDownloadProgress(@RequestParam long queueId) {

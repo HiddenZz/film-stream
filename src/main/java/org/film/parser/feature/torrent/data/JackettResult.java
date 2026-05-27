@@ -25,5 +25,5 @@ public class JackettResult {
     private Integer seeders;
     private Integer peers;
     private Double gain;
-
+    private long tmdbId;
 }
