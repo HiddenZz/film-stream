@@ -18,6 +18,7 @@ public class TMDBConfiguration {
     @Bean
     public TMDBClient tmdbClient(TMDBProperties properties, RestClient restClient) {
         final ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
         final RestClient tmdbRestClient = restClient.mutate()
