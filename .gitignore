@@ -53,3 +53,10 @@ docker/miniosolo/
 
 ### Meta ###
 task.md
+
+### Serena ###
+.serena
+
+### DOCKER ###
+docker/
+!**/docker/docker-compose.yaml
