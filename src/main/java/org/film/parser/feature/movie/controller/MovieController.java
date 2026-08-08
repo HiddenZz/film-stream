@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
 import org.film.parser.feature.movie.data.MovieLibraryResponse;
 import org.film.parser.feature.movie.data.MovieStatusResponse;
+import org.film.parser.feature.movie.data.MovieSummary;
 import org.film.parser.feature.movie.service.MovieService;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.CacheControl;
@@ -32,6 +33,12 @@ public class MovieController {
             @RequestParam(defaultValue = "0") int offset,
             @RequestParam(defaultValue = "20") int limit) {
         return ResponseEntity.ok(movieService.getLibrary(offset, limit));
+    }
+
+    @Operation(summary = "Get a downloaded movie by TMDB ID")
+    @GetMapping("/{tmdbId}")
+    public ResponseEntity<MovieSummary> getMovie(@PathVariable long tmdbId) {
+        return ResponseEntity.ok(movieService.getMovie(tmdbId));
     }
 
     @Operation(summary = "Get movie poster image")

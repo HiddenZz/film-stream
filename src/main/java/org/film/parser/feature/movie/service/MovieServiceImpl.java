@@ -2,6 +2,7 @@ package org.film.parser.feature.movie.service;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.film.parser.core.configuration.properties.AppProperties;
 import org.film.parser.core.configuration.properties.TMDBProperties;
 import org.film.parser.core.exception.ResourceNotFoundException;
 import org.film.parser.feature.movie.data.ContentReady;
@@ -30,6 +31,7 @@ import java.util.List;
 public class MovieServiceImpl implements MovieService {
 
     private static final String POSTER_KEY_FORMAT = "posters/%d.jpg";
+    private static final String POSTER_ENDPOINT_FORMAT = "/movie/%d/poster";
 
     private final ContentReadyRepository repository;
     private final MovieRepository movieRepository;
@@ -38,6 +40,7 @@ public class MovieServiceImpl implements MovieService {
     private final ContentStorageClient contentStorageClient;
     private final RestClient restClient;
     private final TMDBProperties tmdbProperties;
+    private final AppProperties appProperties;
 
     @Override
     public void saveReady(ContentReadyEvent event) {
@@ -98,7 +101,7 @@ public class MovieServiceImpl implements MovieService {
 
             String objectKey = POSTER_KEY_FORMAT.formatted(tmdbId);
             contentStorageClient.putObject(objectKey, new ByteArrayInputStream(imageBytes), imageBytes.length, "image/jpeg");
-            return objectKey;
+            return POSTER_ENDPOINT_FORMAT.formatted(tmdbId);
         } catch (Exception e) {
             log.warn("Failed to download poster for tmdbId={}: {}", tmdbId, e.getMessage());
             return null;
@@ -134,17 +137,22 @@ public class MovieServiceImpl implements MovieService {
     }
 
     @Override
-    public InputStream getPoster(long tmdbId) {
+    public MovieSummary getMovie(long tmdbId) {
         Movie movie = movieRepository.findByTmdbId(tmdbId);
-        if (movie == null || movie.getPosterPath() == null) {
-            throw new ResourceNotFoundException("Poster not found for tmdbId: " + tmdbId);
+        if (movie == null) {
+            throw new ResourceNotFoundException("Movie not found for tmdbId: " + tmdbId);
         }
-        return contentStorageClient.getObject(movie.getPosterPath());
+        return toSummary(movie);
+    }
+
+    @Override
+    public InputStream getPoster(long tmdbId) {
+        return contentStorageClient.getObject(POSTER_KEY_FORMAT.formatted(tmdbId));
     }
 
     private MovieSummary toSummary(Movie movie) {
         String posterUrl = movie.getPosterPath() != null
-                ? "/movie/%d/poster".formatted(movie.getTmdbId())
+                ? appProperties.publicBaseUrl() + movie.getPosterPath()
                 : null;
         return MovieSummary.builder()
                 .tmdbId(movie.getTmdbId())
