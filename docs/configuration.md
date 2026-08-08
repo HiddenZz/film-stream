@@ -5,6 +5,7 @@
 | Service        | Config prefix         | Default                          |
 |----------------|-----------------------|----------------------------------|
 | Server         | `server.port`         | 8084                             |
+| Public base URL| `app.public-base-url` | `${PUBLIC_BASE_URL:http://localhost:8084}` |
 | PostgreSQL     | `spring.datasource`   | localhost:5432/movie             |
 | Redis          | `storage.redis`       | localhost:6379                   |
 | MinIO          | `storage.minio`       | http://127.0.0.1:9000           |
@@ -18,6 +19,7 @@
 - `RedisProperties` — Redis connection and TTL config (`storage.redis`)
 - `JackettProperties` — Jackett API URL and key (`torrent.jackett`)
 - `TMDBProperties` — TMDB API base URL and Bearer token (`tmdb`)
+- `AppProperties` — public base URL for building absolute resource links, e.g. poster URLs (`app`)
 - `RestTemplateConfigurationProperties` — API endpoints (`network.rest-template`)
 
 All scanned via `@ConfigurationPropertiesScan` in `Main.java`.
